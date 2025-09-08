@@ -6,5 +6,5 @@ In district-based electoral systems, political actors have instead resorted to a
 
 In this project, we extend this line of inquiry by demonstrating that gerrymandering can serve as a powerful tool for opinion formation with lasting electoral consequences. Specifically, we argue that gerrymandering inherently involves restructuring social opinion networks, which makes it viable as a long-term method of opinion control. We refer to this repeated application of gerrymandering to shape opinion dynamics within social networks as “Frankenmandering.”
 
-We implement the ideas of the uploaded papers in together to improve the gerrymandering problem: https://github.com/kimiaramezani/Frankenmandering/tree/f84979d86b0d3616549f0d73cf1d86305dc0a13c/Reference%20Papers
+We implement the ideas of the uploaded papers in the [Reference folder](https://github.com/kimiaramezani/Frankenmandering/tree/a7266aea55addbf155c084ad0485f4fe0c37e9ef/Reference%20Papers) together to improve the gerrymandering problem. 
 
