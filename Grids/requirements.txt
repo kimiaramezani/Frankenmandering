@@ -1,0 +1,8 @@
+# virtual env name is gerrymender
+# conda activate gerrymender
+
+# python==3.12
+pandas>=2.2
+numpy>=1.26
+matplotlib=3.10
+pyyaml>=6.0

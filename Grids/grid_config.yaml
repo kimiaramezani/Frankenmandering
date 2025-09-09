@@ -1,0 +1,44 @@
+# === Grid Sandbox Manifest (v1) ===
+grid:
+  width_W: 12
+  height_H: 12
+  districts_K: 6
+  pop_tol_eps: 0.05
+
+io:
+  outdir: data
+  base: null   # or set a fixed base string if you want
+
+coordinates:
+  origin: bottom_left         # geometry style
+  axes: {x: right, y: up}
+  node_id_rule: "id = y * W + x"
+  bounds: {x: [0, W-1], y: [0, H-1]}
+
+adjacency:
+  type: four_neighbor         # N,S,E,W only; no diagonals
+  wrap: false                 # no torus wrapping
+
+determinism:
+  rng_seed: 42
+  tie_break: "smaller y, then smaller x"
+
+acceptance_for_step0:
+  - "These choices are final for v1 (no mid-project changes)."
+  - "All subsequent files must use node ids per id = y*W + x."
+  - "All contiguity/metrics use four-neighbor adjacency."
+
+# Different seeds
+# (If you prefer JSON, mirror the same structure; if you prefer CSV, use columns x,y 
+# per row and one file per preset.)
+
+presets:
+  "12x12_K6":
+    runA: [[2,2], [9,2], [5,5], [2,9], [9,9], [6,6]]
+    runB: [[1,1], [10,1], [6,3], [1,10], [10,10], [6,8]]
+  "30x30_K6":
+    default: [[5,5], [24,5], [14,10], [5,24], [24,24], [14,19]]
+
+# Just tell the code which one to use:
+seeds:
+  key: "12x12_K6:runA"
