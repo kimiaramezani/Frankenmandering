@@ -134,7 +134,6 @@ def choose_seeds(H, W, K, preset=None, rng=42):
     If a preset is provided, sanitize + farthest-point backfill to K.
     Otherwise, start from coarse grid candidates and backfill as needed.
     """
-    import numpy as np
 
     if preset is not None:
         return _sanitize_and_backfill(preset, H, W, K, rng)
