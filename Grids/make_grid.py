@@ -10,6 +10,8 @@ try:
     import yaml
 except Exception:
     yaml = None
+    
+from opinion_generator import OpinionFiller
 
 # --- config loader ---
 def load_config(path):
@@ -274,6 +276,16 @@ def main():
     outdir = Path(outdir_val); outdir.mkdir(parents=True, exist_ok=True)
 
     nodes = build_nodes(H, W)
+    # ---- opinions (from config) ----
+    opin_cfg = cfg.get("opinions", None)  # e.g., {"mode":"hbo","seed":202,"alpha":2,"beta":2,"influence":0.8,"kappa":4}
+    if opin_cfg:
+        filler = OpinionFiller.from_config(opin_cfg)
+        filler.apply(nodes, H, W, inplace=True)
+        print(f"[OK] opinions filled: mode={filler.mode}")
+    else:
+        print("[SKIP] opinions: using placeholder value already in build_nodes()")
+    
+    # ---- write edges ----
     edges = build_edges_grid(H, W)
 
     nodes_p = outdir / f"{base}__nodes.csv"
