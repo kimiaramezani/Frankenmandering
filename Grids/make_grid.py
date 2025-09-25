@@ -43,7 +43,7 @@ def build_nodes(H, W, population=1, opinion=0.5, area=1.0):
     # Those changes will be reflected in the original 2D grid.
     x = xs.ravel().astype(np.int16)
     y = ys.ravel().astype(np.int16)
-    ids = (y * W + x).astype(np.int32)
+    ids = (y * W + x).astype(np.int16)
     df = pd.DataFrame({
         "id": ids,
         "x": x,
