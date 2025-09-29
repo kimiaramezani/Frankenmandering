@@ -34,6 +34,14 @@ def graph_to_frankendata(G, num_districts: int, use_scaled_opinion: bool = True)
         raise ValueError("district labels missing; run greedy_fill_districts(..) first.")
     dist_label = G.df_nodes['district'].to_numpy(dtype=np.int64)  # labels in {1..K}; will cast to torch.long in FrankenData
 
+    # --- geo edges: edge_index (2,E) + edge_attr (E,) (One per pair, not directed)
+    if not G.df_edges_geo.empty:
+        geo_edge = torch.tensor(G.df_edges_geo[['u','v']].to_numpy().T, dtype=torch.long)
+        geo_attr = torch.tensor(G.df_edges_geo['weight_grid'].to_numpy(), dtype=torch.float) \
+                if 'weight_grid' in G.df_edges_geo.columns else None
+    else:
+        geo_edge, geo_attr = None, None
+    
     # --- social edges: edge_index (2,E) + edge_attr (E,)
     if G.df_edges_social is None or G.df_edges_social.empty:
         raise ValueError("No social edges found; build_edges_social_ba(..) first.")
@@ -65,7 +73,7 @@ def graph_to_frankendata(G, num_districts: int, use_scaled_opinion: bool = True)
     reps = [(-1 if r is None else int(r)) for r in reps]
 
     # --- Build FrankenData
-    FD = FrankenData(
+    return FrankenData(
         so_edge    = so_edge,          # (2,E) long
         assignment = assignment,       # (N,D) float; env will replace this after each step
         orig_edge_num = orig_edge_num, # scalar
@@ -73,6 +81,7 @@ def graph_to_frankendata(G, num_districts: int, use_scaled_opinion: bool = True)
         pos       = pos,               # (N,2) float32
         reps      = reps,              # (D,) int
         dist_label= dist_label,        # (N,)  will be cast inside FrankenData
-        edge_attr = edge_attr          # (E,) float32
+        edge_attr = edge_attr,          # (E,) float32
+        geo_edge  = geo_edge,         # (2,E_geo) long or None
+        geo_attr  = geo_attr          # (E_geo,) float32 or None 
     )
-    return FD
