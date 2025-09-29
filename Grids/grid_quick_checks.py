@@ -1,7 +1,7 @@
 import torch
 import torch_geometric
 import matplotlib.pyplot as plt
-from make_grid_2 import Graph
+from make_grid_3 import Graph
 # print("Torch:", torch.__version__)
 # print("CUDA available:", torch.cuda.is_available())
 # print("PyG OK:", torch_geometric.__version__)
@@ -13,12 +13,12 @@ G = Graph(*Graph.make_node_ids(36))             # N=36 for a 6×6 demo
 G.generate_positions(mode="grid", H=6, W=6)
 
 # # 2) Build GEO edges (rook or queen). Optional: store both (u,v) and (v,u)
-G.build_edges_grid(H=6, W=6, neighborhood="rook", store_bidirectional_rows=False)
+G.build_edges_grid(H=6, W=6, neighborhood="rook", weight_grid=1.0, barrier_flag=0)
 # # 2b) You can also build queen edges instead of rook
-# # G.build_edges_grid(H=6, W=6, neighborhood="queen", store_bidirectional_rows=False)
+# # G.build_edges_grid(H=6, W=6, neighborhood="queen", weight_grid=1.0, barrier_flag=0)
 
 # # 3) Build SOCIAL edges (Barabási–Albert). Optional: store both (u,v) and (v,u)
-G.build_edges_social_ba(m=2, rng_seed=42, weight_social=1, store_bidirectional_rows=False)
+G.build_edges_social_ba(m=2, rng_seed=42, weight_social=1.0)
 
 # # 4) (Optional) Compose a union NetworkX graph for traversal/visualization
 G.update_union_graph(carry_layer_flags=True)
@@ -42,7 +42,9 @@ print("PyG num nodes:", data["node"].num_nodes)
 print("PyG positions shape:", data["node"].pos.shape)
 print("PyG position type:", data["node"].pos.dtype)  # should be torch.float32
 print("PyG GEO edge_index:", data["node","geo","node"].edge_index.shape)
+print("PyG GEO edge_index:", data["node","geo","node"].edge_index)
 print("PyG SOC edge_index:", data["node","social","node"].edge_index.shape)
+print("PyG SOC edge_index:", data["node","social","node"].edge_index)
 if ('node','district','node') in data.edge_types:
     print("PyG DIST edge_index:", data[('node','district','node')].edge_index.shape)
     
@@ -57,8 +59,13 @@ print("District Label type:", labels.dtype)  # each torch.Size([N])
 print("Opinions (x):", data['node'].x.view(-1))  # flatten to 1D
 print("Complete data object:", data)
 
-print("GEO table:\n", G.df_edges_geo)
-print("SOC table:\n", G.df_edges_social.head(59))  # show first 59 rows only
+#print("GEO table:\n", G.df_edges_geo)
+print("PyG Geo Edges:\n", data['node','geo','node'].edge_index[:,:])
+print("SOC table:\n", G.df_edges_social)  # show first 68 rows only
+print("PyG Soc Edges:\n", data['node','social','node'].edge_index[:,:])
+print("PyG Soc Edges:\n", data['node','social','node'].edge_index[:,:].T) 
+
+
 
 # # # ---- 3D multi-layer preview
 # # fig = G.render_layers(
