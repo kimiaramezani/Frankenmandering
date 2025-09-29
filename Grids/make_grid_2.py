@@ -544,11 +544,26 @@ class Graph:
         return self
 
     @staticmethod
-    def _edge_index_from_df(df: pd.DataFrame, ucol: str = "u", vcol: str = "v"):
+    def _edge_index_from_df(df: pd.DataFrame, ucol: str = "u", vcol: str = "v", dup_policy: str = "undirected"):
         # df must have columns ucol, vcol
+        # dup_policy: "auto" | "undirected" | "directed"
         df_uv = df[[ucol, vcol]]
+        
+        if dup_policy not in ("auto", "undirected", "directed"):
+            raise ValueError(f"dup_policy must be one of 'auto'|'never'|'always', got {dup_policy}")
+
+        if dup_policy == "undirected":
+            e = df_uv.to_numpy().T
+            return torch.tensor(e, dtype=torch.long), False
+
+        if dup_policy == "directed":
+            e = pd.concat([df_uv, df_uv.rename(columns={ucol: vcol, vcol: ucol})],ignore_index=True).to_numpy().T
+            return torch.tensor(e, dtype=torch.long), True
+
+        # dup_policy == "auto" → existing heuristic
         sym = df_uv.merge(df_uv, left_on=[ucol, vcol], right_on=[vcol, ucol], how="inner")
-        already_bidir = len(sym) >= len(df_uv) * 0.8  # heuristic
+        # already_bidir = len(sym) >= len(df_uv) * 0.8  # heuristic
+        already_bidir = len(sym) == len(df_uv)
 
         if already_bidir:
             e = df_uv.to_numpy().T
@@ -579,20 +594,20 @@ class Graph:
         # GEO
         geo = self.df_edges_geo if self.df_edges_geo is not None else pd.DataFrame(columns=["u","v"])
         if not geo.empty:
-            ei_geo, doubled = self._edge_index_from_df(geo, "u", "v")
+            ei_geo, doubled = self._edge_index_from_df(geo, "u", "v", dup_policy="undirected")
             data['node','geo','node'].edge_index = ei_geo
             if 'weight_grid' in geo.columns:
                 w = torch.tensor(geo['weight_grid'].to_numpy(), dtype=torch.float)
-                data['node','geo','node'].edge_weight = torch.cat([w, w], 0) if not doubled else w
+                data['node','geo','node'].edge_weight = torch.cat([w, w], 0) if doubled else w
 
         # SOCIAL
         soc = self.df_edges_social if self.df_edges_social is not None else pd.DataFrame(columns=["u","v"])
         if not soc.empty:
-            ei_soc, doubled = self._edge_index_from_df(soc, "u", "v")
+            ei_soc, doubled = self._edge_index_from_df(soc, "u", "v", dup_policy="directed")
             data['node','social','node'].edge_index = ei_soc
             if 'weight_social' in soc.columns:
                 w = torch.tensor(soc['weight_social'].to_numpy(), dtype=torch.float)
-                data['node','social','node'].edge_weight = torch.cat([w, w], 0) if not doubled else w
+                data['node','social','node'].edge_weight = torch.cat([w, w], 0) if doubled else w
 
         return data
 
