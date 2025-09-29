@@ -75,13 +75,13 @@ def graph_to_frankendata(G, num_districts: int, use_scaled_opinion: bool = True)
     # --- Build FrankenData
     return FrankenData(
         so_edge    = so_edge,          # (2,E) long
-        assignment = assignment,       # (N,D) float; env will replace this after each step
+        # assignment = assignment,       # (N,D) float; env will replace this after each step
         orig_edge_num = orig_edge_num, # scalar
         opinion   = opinion,           # (N,1) float32
         pos       = pos,               # (N,2) float32
         reps      = reps,              # (D,) int
         dist_label= dist_label,        # (N,)  will be cast inside FrankenData
-        edge_attr = edge_attr,          # (E,) float32
-        geo_edge  = geo_edge,         # (2,E_geo) long or None
-        geo_attr  = geo_attr          # (E_geo,) float32 or None 
+        edge_attr = edge_attr,         # (E,) float32
+        geo_edge  = geo_edge,          # (2,E_geo) long or None
+        # geo_attr  = geo_attr           # (E_geo,) float32 or None
     )
