@@ -4,7 +4,7 @@
 import numpy as np
 import torch
 
-from Environment.gerry_environment_12 import FrankenData, elect_representatives   # make sure path/module is correct
+from Environment.gerry_environment_14 import FrankenData, elect_representatives   # make sure path/module is correct
 
 def graph_to_frankendata(G, num_districts: int, use_scaled_opinion: bool = True) -> FrankenData:
     """
