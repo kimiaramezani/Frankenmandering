@@ -16,3 +16,4 @@ torch>=2.8.0
 #torchvision>=0.23.0
 # pip install pyg-lib torch-scatter torch-sparse torch-cluster torch-spline-conv -f https://data.pyg.org/whl/torch-2.8.0+cpu.html
 torch-geometric>=2.6.1
+gymnasium==1.2.0
