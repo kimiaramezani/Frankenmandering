@@ -3,10 +3,11 @@ import torch
 from torch_geometric.data import Data, HeteroData
 import gymnasium as gym
 from gymnasium import spaces
-from Environment.gerry_environment_17 import FrankenData, FrankenmanderingEnv
+from gerry_environment_chin import FrankenData, FrankenmanderingEnv
 from init_graph_to_frankendata import graph_to_frankendata, inchworm_to_frankendata
 from make_grid_chin import Graph
 from torch_geometric.data import Data, HeteroData
+import networkx as nx
 
 # ---- General graph builder and Frankendata converter ----
 # Convert to FrankenData (also attaches a full HeteroData at fd.hetero)
@@ -56,7 +57,7 @@ def build_init_data(
     # 3) SOCIAL edges
     G.build_edges_social_ba(m=ba_m, rng_seed=rng_seed)
 
-    # 4) reps init (kept to mirror your pipeline)
+    # 4) reps init (kept to mirror the pipeline)
     G.initial_reps(K=K)
 
     # 5) HBO opinions (writes 'opinion' and, with scale_out, 'opinion_scaled')

@@ -3,9 +3,10 @@
 
 import numpy as np
 import torch
-from torch_geometric.data import HeteroData
+from torch_geometric.data import Data, HeteroData
+import networkx as nx
 
-from Environment.gerry_environment_17 import FrankenData   # make sure path/module is correct
+from gerry_environment_chin import FrankenData   # make sure path/module is correct
 
 def graph_to_frankendata(G, 
                          num_districts: int, 
@@ -40,7 +41,7 @@ def graph_to_frankendata(G,
     if 'district' not in G.df_nodes.columns:
         raise ValueError("district labels missing; run greedy_fill_districts(..) first.")
     dist_label_1K = G.df_nodes['district'].to_numpy(dtype=np.int64)
-    dist_label = dist_label_1K - 1
+    dist_label = dist_label_1K
     if dist_label.min() < 0 or dist_label.max() >= D:
         raise ValueError(f"District labels out of range after zero-base. Got unique={np.unique(dist_label)}")
 

@@ -1,5 +1,8 @@
 import matplotlib.pyplot as plt
+import networkx as nx
+from graph_initiator import build_inchworm_init_data
 
+inch_data, G_inch = build_inchworm_init_data()
 pos = {i: (i, 0) for i in range(10)}  # lay nodes 0..9 on a line
 
 chain_edges = [(3,4), (4,5), (5,6), (6,7), (7,8), (8,9)]

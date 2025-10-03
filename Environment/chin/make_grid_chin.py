@@ -372,27 +372,26 @@ class Graph:
         N = len(self.df_nodes)
         rng = np.random.default_rng(rng_seed)
 
-        # State
-        labels = np.zeros(N, dtype=np.int32)  # 0 = unassigned, else district id 1..K
+        # State (use -1 only internally while constructing; final is 0..K-1)
+        labels = np.full(N, -1, dtype=np.int32) 
         assigned = np.zeros(N, dtype=bool)
 
-        # Initialize: place seeds
-        for j, nid in enumerate(seed_ids, start=1):
+        # Initialize:  place seeds with labels 0..K-1
+        for j, nid in enumerate(seed_ids):
             labels[nid] = j
             assigned[nid] = True
 
         # Build initial frontiers N_j(t) from G_geo.neighbors (geo graph)
-        frontiers = [set() for _ in range(K + 1)]  # 1..K
-        for j, nid in enumerate(seed_ids, start=1):
+        frontiers = [set() for _ in range(K)]  # indices 0..K-1
+        for j, nid in enumerate(seed_ids):
             for u in self.G_geo.neighbors(nid):
                 if not assigned[u]:
                     frontiers[j].add(u)
 
         n_assigned = len(seed_ids)
-        total = N
 
-        while n_assigned < total:
-            sizes = np.array([len(frontiers[j]) for j in range(1, K+1)], dtype=float)
+        while n_assigned < N:
+            sizes = np.array([len(frontiers[j]) for j in range(K)], dtype=float)
             S = sizes.sum()
             if S == 0:
                 # Degenerate fallback: attach any unassigned node that touches any district
@@ -412,7 +411,7 @@ class Graph:
                             for w in self.G_geo.neighbors(u):
                                 if not assigned[w]:
                                     frontiers[j].add(w)
-                            for jj in range(1, K+1):
+                            for jj in range(K):
                                 frontiers[jj].discard(u)
                             attached = True
                             break
@@ -424,16 +423,16 @@ class Graph:
                 u = int(np.flatnonzero(~assigned)[0])
                 # nearest seed’s label:
                 nearest = min(range(K), key=lambda j: abs(u - seed_ids[j]))
-                labels[u] = nearest + 1
+                labels[u] = nearest
                 assigned[u] = True
                 n_assigned += 1
                 continue
 
             # Choose district with p_j ∝ |N_j(t)| (eq. 8)
             p = sizes / S
-            j_choice = int(rng.choice(np.arange(1, K+1), p=p))
+            j_choice = int(rng.choice(np.arange(K), p=p))
             # Pick a cell uniformly from that frontier (eq. 9 sampling over N_j)
-            u = rng.choice(list(frontiers[j_choice]))
+            u = int(rng.choice(list(frontiers[j_choice])))
             labels[u] = j_choice
             assigned[u] = True
             n_assigned += 1
@@ -444,7 +443,7 @@ class Graph:
                 if not assigned[w]:
                     frontiers[j_choice].add(w)
             #  - remove u from all frontiers
-            for jj in range(1, K+1):
+            for jj in range(K):
                 frontiers[jj].discard(u)
 
         # Persist
