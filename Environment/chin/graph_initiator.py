@@ -3,7 +3,7 @@ import torch
 from torch_geometric.data import Data, HeteroData
 import gymnasium as gym
 from gymnasium import spaces
-from gerry_environment_chin import FrankenData, FrankenmanderingEnv
+from Environment.gerry_environment_17 import FrankenData, FrankenmanderingEnv
 from init_graph_to_frankendata import graph_to_frankendata, inchworm_to_frankendata
 from make_grid_chin import Graph
 from torch_geometric.data import Data, HeteroData
