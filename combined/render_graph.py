@@ -184,12 +184,12 @@ def render_graph(data: HeteroData, figsize=(14, 12), return_rgb=False):
         scatter = ax.scatter(
             x, y, s=100, c=op_norm, cmap='RdBu_r',
             edgecolors='black', linewidths=0.8,
-            alpha=0.85, zorder=2, vmin=0.0, vmax=1.0
+            alpha=0.85, zorder=2, vmin=0.0, vmax=7.0
         )
 
         # Add colorbar
         cbar = fig.colorbar(scatter, ax=ax, fraction=0.046, pad=0.04)
-        cbar.set_label('Opinion (0→1)', rotation=270, labelpad=15)
+        cbar.set_label('Opinion (0→7)', rotation=270, labelpad=15)
 
         # Overlay geo edges faintly
         if geo_edges is not None:
