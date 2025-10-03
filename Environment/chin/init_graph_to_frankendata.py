@@ -97,3 +97,79 @@ def graph_to_frankendata(G,
     if attach_hetero:
         fd.hetero = G.to_pyg_hetero()  # a torch_geometric.data.HeteroData
     return fd
+
+
+def inchworm_to_frankendata(G_nx, num_districts: int | None = None):
+    """
+    Minimal adapter: NetworkX (inchworm) -> FrankenData
+    - Social edges/weights: passed as None
+    - Geo edges/weights: taken from G_nx edges; weight from 'weight_grid' if present else 1.0
+    - District labels: assume 1..K on nodes; convert to 0..K-1
+    - Opinion: take node attr 'opinion' (default 0.0); shape (N,1), float32
+    - Pos: take node attrs 'x','y' if present; else deterministic spring layout
+    - orig_edge_num = 0
+    """
+    # ----- stable node order → ids 0..N-1
+    nodes = sorted(G_nx.nodes())
+    idx = {n: i for i, n in enumerate(nodes)}
+    N = len(nodes)
+
+    # ----- dist_label (zero-based)
+    dist = np.asarray([G_nx.nodes[n].get("district", 1) for n in nodes], dtype=np.int64)
+    K = int(dist.max()) if num_districts is None else int(num_districts)
+    dist_label = (dist - 1).astype(np.int64)
+
+    # ----- opinion (N,1) float32
+    opin = np.asarray([G_nx.nodes[n].get("opinion", 0.0) for n in nodes], dtype=np.float32)
+    opinion = opin[:, None]  # (N,1)
+
+    # ----- pos (N,2) float32
+    has_xy = all(("x" in G_nx.nodes[n] and "y" in G_nx.nodes[n]) for n in nodes)
+    if has_xy:
+        pos = np.stack([[G_nx.nodes[n]["x"], G_nx.nodes[n]["y"]] for n in nodes], axis=0).astype(np.float32)
+    else:
+        layout = nx.spring_layout(G_nx, seed=0, dim=2)
+        pos = np.stack([layout[n] for n in nodes], axis=0).astype(np.float32)
+
+    # ----- geographical_edge (2, E_geo) long, geo_edge_attr (E_geo,) float32
+    undirected_pairs = set()
+    for u, v in G_nx.edges():
+        a, b = idx[u], idx[v]
+        if a == b:
+            continue
+        if a > b:
+            a, b = b, a
+        undirected_pairs.add((a, b))
+    pairs = sorted(undirected_pairs)
+
+    if len(pairs):
+        geographical_edge = np.asarray(pairs, dtype=np.int64).T  # (2, E_geo)
+        geo_w = []
+        for a, b in pairs:
+            u, v = nodes[a], nodes[b]
+            w = G_nx[u][v].get("weight_grid", 1.0)
+            geo_w.append(float(w))
+        geo_edge_attr = np.asarray(geo_w, dtype=np.float32)
+    else:
+        geographical_edge = np.empty((2, 0), dtype=np.int64)
+        geo_edge_attr = np.empty((0,), dtype=np.float32)
+
+    # ----- social edges/weights: None (you requested passing None through)
+    social_edge = np.empty((2, 0), dtype=np.int64)
+    edge_attr = np.empty((0,), dtype=np.float32)
+    orig_edge_num = 0
+    reps = [-1] * K
+
+    # ----- build FrankenData (cast only where necessary)
+    fd_inch = FrankenData(
+        social_edge=social_edge,                   # None
+        geographical_edge=geographical_edge,       # (2, E_geo)
+        orig_edge_num=int(orig_edge_num),          # 0
+        opinion=opinion,                           # (N,1)
+        pos=pos,                                   # (N,2)
+        reps=reps,                                 # list length K
+        dist_label=dist_label,                     # (N,)
+        edge_attr=edge_attr,                       # None
+        geo_edge_attr=geo_edge_attr,               # (E_geo,)
+    )
+    return fd_inch
