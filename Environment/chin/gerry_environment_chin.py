@@ -46,7 +46,7 @@ import copy
 """
 
 class FrankenData(Data):
-  def __init__(self, social_edge, geographical_edge, orig_edge_num, opinion, pos, reps, dist_label, edge_attr, **kwargs):
+  def __init__(self, social_edge, geographical_edge, orig_edge_num, opinion, pos, reps, dist_label, edge_attr, geo_edge_attr, **kwargs):
     super().__init__(**kwargs)
 
     self.orig_edge_num = int(orig_edge_num)
@@ -60,12 +60,10 @@ class FrankenData(Data):
     self.edge_attr   = torch.as_tensor(edge_attr, dtype=torch.float32)  # (E,)
 
     # geographical edge is optional (allow None)
-    if geographical_edge is None:
-        self.geographical_edge = None
-    else:
-        self.geographical_edge = torch.as_tensor(geographical_edge, dtype=torch.long)
+    self.geographical_edge = torch.as_tensor(geographical_edge, dtype=torch.long)
+    self.geo_edge_attr   = torch.as_tensor(geo_edge_attr, dtype=torch.float32)  # (E,)
 
-    self.reps = torch.as_tensor(reps, dtype=torch.long)                 # (D,)
+    self.reps = list(reps)  # list of length K-number_of_districts, each is int or None
 
     # kwargs may include things like: hetero=HeteroData
     for k, v in kwargs.items():
@@ -81,7 +79,6 @@ class FrankenData(Data):
       data = torch.load(file_path)
       print(f"FrankenData object loaded from {file_path}")
       return data
-
 
 class FrankenmanderingEnv(gym.Env):
 

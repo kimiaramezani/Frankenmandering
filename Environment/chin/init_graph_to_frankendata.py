@@ -5,7 +5,7 @@ import numpy as np
 import torch
 from torch_geometric.data import HeteroData
 
-from gerry_environment_chin import FrankenData, elect_representatives   # make sure path/module is correct
+from gerry_environment_chin import FrankenData   # make sure path/module is correct
 
 def graph_to_frankendata(G, 
                          num_districts: int, 
@@ -77,15 +77,9 @@ def graph_to_frankendata(G,
     # assignment = np.zeros((N, D), dtype=np.float32)
     # assignment[np.arange(N), zero_based] = 1.0   # one-hot rows
 
-    # --- representatives (optional but useful to initialize env state)
-    # Franken env has helper; we can compute now so env starts with consistent reps.
-    # reps = elect_representatives(zero_based, opinion, D)  # returns list of ints/None
-
-    # Convert None to -1 (env does that later anyway)
-    # reps = [(-1 if r is None else int(r)) for r in reps]
+    # --- set initial representatives (D,)
+    reps = [-1]*D  # -1 means "not yet elected"
     
-    reps = -1 * num_districts
-
     # --- Build FrankenData (NOTE: kw names must match class __init__)
     fd = FrankenData(
         social_edge       = soc_ei,
@@ -95,8 +89,8 @@ def graph_to_frankendata(G,
         pos               = pos,
         reps              = reps,
         dist_label        = dist_label,
-        edge_attr     = edge_attr,
-        # geo_edge_attr     = geo_attr,
+        edge_attr         = edge_attr,
+        geo_edge_attr     = geo_attr,
     )
 
     # --- (optional) also keep a full heterogeneous graph inside the Data

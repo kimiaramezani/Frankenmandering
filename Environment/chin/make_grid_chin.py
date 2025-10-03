@@ -503,6 +503,9 @@ class Graph:
         self.df_edges_social = soc_df_dir
         return soc_df_dir
 
+    def initial_reps(self, K: int):
+        return -1 * K
+    
     def update_union_graph(self, *, carry_layer_flags: bool = True, directed: bool = False):
         self.G = nx.DiGraph() if directed else nx.Graph()
         N = len(self.df_nodes); self.G.add_nodes_from(range(N))
@@ -553,7 +556,9 @@ class Graph:
         # (optional) district labels as targets/aux
         if 'district' in self.df_nodes.columns:
             data['node'].district = torch.tensor(self.df_nodes['district'].to_numpy(), dtype=torch.long)
-
+        
+        data['reps'] = torch.tensor(self.initial_reps(K=3), dtype=torch.long)  # placeholder
+            
         # GEO
         if self.df_edges_geo is not None and not self.df_edges_geo.empty:
             ei_geo = torch.tensor(self.df_edges_geo[['u','v']].to_numpy().T, dtype=torch.long)
