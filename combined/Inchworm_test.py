@@ -75,6 +75,20 @@ districts = [
 
 history = run_inchworm(env, districts)
 
+# --- To tun the inchworm with social edges, use build_inchworm_soc_init_data() instead of build_inchworm_init_data() ---
+# --- The social edges will be empty in the first case and populated in the second case.
+
+# init_inch_soc_data, G_inch = build_inchworm_soc_init_data()
+# # infer sizes
+# num_voters = init_inch_soc_data.opinion.shape[0]
+# num_districts = 1
+
+# env = gerry_environment.FrankenmanderingEnv(num_voters=num_voters,
+#                           num_districts=num_districts,
+#                           FrankenData=init_inch_soc_data,
+#                                                )
+
+
 # import numpy as np
 # simple test
 # def update_opinion(voter_opinion, rep_opinion):
