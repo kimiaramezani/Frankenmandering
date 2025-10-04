@@ -107,8 +107,15 @@ def build_inchworm_init_data():
     opinions = {0:0, 1:0, 2:0, 3:1, 4:2, 5:3, 6:4, 7:5, 8:5, 9:5}
     nx.set_node_attributes(G_inch, opinions, name="opinion")
     
-    # We will not use these district labels in the env; hardcoded district lists are used instead
-
+    # --- Stash social/dist/reps on the graph (pass-through for the converter) ---
+    G_inch.graph["social_edge"] = np.empty((2, 0), dtype=np.int64)
+    G_inch.graph["edge_attr"]   = np.empty((0,),   dtype=np.float32)
+    G_inch.graph["orig_edge_num"] = G_inch.graph["social_edge"].shape[1]  # 0 if empty
+    
+    
+    G_inch.graph["dist_label"]  = None
+    G_inch.graph["reps"]        = None
+    
     # Convert to FrankenData (social edges remain empty; geo edges populated)
     init_data = inchworm_to_frankendata(G_inch)
 

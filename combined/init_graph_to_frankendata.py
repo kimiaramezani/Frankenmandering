@@ -102,23 +102,19 @@ def graph_to_frankendata(G,
 
 def inchworm_to_frankendata(G_nx, num_districts: int = 1):
     """
-    Minimal adapter: NetworkX (inchworm) -> FrankenData
-    - Social edges/weights: passed as None
-    - Geo edges/weights: taken from G_nx edges; weight from 'weight_grid' if present else 1.0
-    - District labels: assume 1..K on nodes; convert to 0..K-1
-    - Opinion: take node attr 'opinion' (default 0.0); shape (N,1), float32
-    - Pos: take node attrs 'x','y' if present; else deterministic spring layout
-    - orig_edge_num = 0
+    Pass-through converter: read everything from the NX graph and forward to FrankenData.
+    - Opinions from node attr 'opinion' (default 0.0) -> (N,1) float32
+    - Positions from node attrs 'x','y' if present else deterministic spring layout
+    - Geographic edges from G_nx edges; weight from 'weight_grid' (default 1.0)
+    - Social edges / weights from G_nx.graph['social_edge'] / ['edge_attr'] (can be empty)
+    - dist_label and reps from G_nx.graph (can be None)
+    - orig_edge_num from G_nx.graph (default 0)
     """
     # ----- stable node order → ids 0..N-1
     nodes = sorted(G_nx.nodes())
     idx = {n: i for i, n in enumerate(nodes)}
     N = len(nodes)
-    D = max(1, int(num_districts))
-    
-    # placeholders required by FrankenData
-    dist_label = None
-    
+     
     # ----- opinion (N,1) float32
     opin = np.asarray([G_nx.nodes[n].get("opinion", 0.0) for n in nodes], dtype=np.float32)
     opinion = opin[:, None]  # (N,1)
@@ -142,36 +138,32 @@ def inchworm_to_frankendata(G_nx, num_districts: int = 1):
         undirected_pairs.add((a, b))
     pairs = sorted(undirected_pairs)
 
-    if len(pairs):
-        geographical_edge = np.asarray(pairs, dtype=np.int64).T  # (2, E_geo)
-        geo_w = []
-        for a, b in pairs:
-            u, v = nodes[a], nodes[b]
-            w = G_nx[u][v].get("weight_grid", 1.0)
-            geo_w.append(float(w))
+    if pairs:
+        geographical_edge = np.asarray(pairs, dtype=np.int64).T
+        geo_w = [float(G_nx[nodes[a]][nodes[b]].get("weight_grid", 1.0)) for a, b in pairs]
         geo_edge_attr = np.asarray(geo_w, dtype=np.float32)
     else:
         geographical_edge = np.empty((2, 0), dtype=np.int64)
         geo_edge_attr = np.empty((0,), dtype=np.float32)
 
-    # ----- social edges/weights: None (you requested passing None through)
-    social_edge = np.empty((2, 0), dtype=np.int64)
-    edge_attr = np.empty((0,), dtype=np.float32)
-    orig_edge_num = 0
-    
-    reps = None
+   # Social edges/weights: pass-through exactly as stored on the graph (can be empty or None)
+    social_edge = G_nx.graph.get("social_edge", None)
+    edge_attr   = G_nx.graph.get("edge_attr",   None)
+    orig_edge_num = int(G_nx.graph.get("orig_edge_num", 0))
 
+    dist_label = G_nx.graph.get("dist_label", None)
+    reps       = G_nx.graph.get("reps", None)
 
-    # ----- build FrankenData (cast only where necessary)
+    # Build FrankenData (your class accepts None for optional fields)
     fd_inch = FrankenData(
-        social_edge=social_edge,                   # None
-        geographical_edge=geographical_edge,       # (2, E_geo)
-        orig_edge_num=int(orig_edge_num),          # 0
-        opinion=opinion,                           # (N,1)
-        pos=pos,                                   # (N,2)
-        dist_label=dist_label,                     # (N,)
-        reps=reps,                                 # list length K
-        edge_attr=edge_attr,                       # None
-        geo_edge_attr=geo_edge_attr,               # (E_geo,)
+        social_edge=social_edge,
+        geographical_edge=geographical_edge,
+        orig_edge_num=orig_edge_num,
+        opinion=opinion,
+        pos=pos,
+        dist_label=dist_label,
+        reps=reps,
+        edge_attr=edge_attr,
+        geo_edge_attr=geo_edge_attr,
     )
     return fd_inch
