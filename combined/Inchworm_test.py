@@ -46,7 +46,7 @@ def run_inchworm(env, districts):
         assignment = np.zeros((env.num_voters, env.num_districts), dtype=np.float32)
         for v in range(env.num_voters):
             if v in district:
-                assignment[v, 0] = 1.0 # Should this be assignment [v] or assignment [v,0]?
+                assignment[v] = 1.0 # Should this be assignment [v] or assignment [v,0]?
                 # assignment [v,0] keeps the assignment matrix (N×1) valid for “one evolving district,”
                 # instead of setting all columns for that voter to 1.0.
             # else:
