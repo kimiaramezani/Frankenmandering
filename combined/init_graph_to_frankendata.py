@@ -117,7 +117,7 @@ def inchworm_to_frankendata(G_nx, num_districts: int = 1):
     D = max(1, int(num_districts))
     
     # placeholders required by FrankenData
-    dist_label = np.zeros(N, dtype=np.int64)  # everyone in district 0; env will ignore via your assignment matrix
+    dist_label = None
     
     # ----- opinion (N,1) float32
     opin = np.asarray([G_nx.nodes[n].get("opinion", 0.0) for n in nodes], dtype=np.float32)
