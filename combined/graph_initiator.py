@@ -86,7 +86,7 @@ def build_inchworm_init_data():
       - Nodes: 0..9
       - Geo edges: as per the test structure
       - Edge weights: 'weight_grid' = 1.0
-      - Node attrs: 'opinion', 'district' (districts are 1..K; converter zero-bases)
+      - Node attrs: 'opinion', 'district' (districts are None; converter leaves dist_label=None)
       - Social edges: none (converter leaves social tensors empty)
     """
     G_inch = nx.Graph()
@@ -121,6 +121,60 @@ def build_inchworm_init_data():
 
     return init_data, G_inch
 
+def build_inchworm_soc_init_data():
+    """
+    Build a 6-node inchworm test graph with:
+      - GEO (undirected) edges: 0-1-2-3-4-5, weight_grid = 1.0
+      - SOCIAL (directed) edges: 0→1→2→3→4→5 and 5→4→3→2→1→0, weight = 1.0
+      - Opinions on nodes (no scaling)
+      - dist_label=None, reps=None
+    Returns (init_data, G_inch). inchworm_to_frankendata reads everything from G_inch.
+    """
+    G_inch = nx.Graph()
+    G_inch.add_nodes_from(range(6))  # nodes 0..5
+
+    # ---------- GEO (undirected) ----------
+    geo_edges = [(i, i+1) for i in range(5)]          # 0-1, 1-2, 2-3, 3-4, 4-5
+    G_inch.add_edges_from(geo_edges)
+    nx.set_edge_attributes(G_inch, {e: {"weight_grid": 1.0} for e in geo_edges})
+
+    # ---------- Opinions ----------
+    opinions = {0: 0.0, 1: 1.0, 2: 2.0, 3: 3.0, 4: 4.0, 5: 6.0}  # (fix: added missing comma)
+    nx.set_node_attributes(G_inch, opinions, name="opinion")
+
+    # ---------- SOCIAL (directed) via to_directed ----------
+    # Build an undirected "spine" for social, then make it directed
+    soc_edges_undirected = [(i, i+1) for i in range(5)]
+    G_soc = nx.Graph()
+    G_soc.add_nodes_from(range(6))
+    G_soc.add_edges_from(soc_edges_undirected)
+    nx.set_edge_attributes(G_soc, {e: {"weight_soc": 1.0} for e in soc_edges_undirected})
+
+    # Each undirected edge becomes two arcs (u,v) and (v,u)
+    G_soc_dir = G_soc.to_directed()
+
+    # Convert directed edges -> arrays expected by the converter
+    soc_edges_dir = list(G_soc_dir.edges())  # list[(u,v)]
+    if soc_edges_dir:
+        social_edge = np.asarray(soc_edges_dir, dtype=np.int64).T            # shape (2, E_soc)
+        edge_attr   = np.asarray(
+            [float(G_soc_dir[u][v].get("weight_soc", 1.0)) for (u, v) in soc_edges_dir],
+            dtype=np.float32
+        )                                                                    # shape (E_soc,)
+    else:
+        social_edge = np.empty((2, 0), dtype=np.int64)
+        edge_attr   = np.empty((0,),   dtype=np.float32)
+
+    # ---------- Stash social + metadata on the *same* graph ----------
+    G_inch.graph["social_edge"]   = social_edge
+    G_inch.graph["edge_attr"]     = edge_attr
+    G_inch.graph["orig_edge_num"] = int(social_edge.shape[1])  # number of directed arcs
+    G_inch.graph["dist_label"]    = None
+    G_inch.graph["reps"]          = None
+
+    # ---------- Convert (pass-through) ----------
+    init_inch_soc_data = inchworm_to_frankendata(G_inch)
+    return init_inch_soc_data, G_inch
 
 
 
