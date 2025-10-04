@@ -6,7 +6,7 @@ import torch
 from torch_geometric.data import Data, HeteroData
 import networkx as nx
 
-from gerry_environment_chin import FrankenData   # make sure path/module is correct
+from gerry_environment import FrankenData   # make sure path/module is correct
 
 def graph_to_frankendata(G, 
                          num_districts: int, 
