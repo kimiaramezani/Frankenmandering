@@ -100,7 +100,7 @@ def graph_to_frankendata(G,
     return fd
 
 
-def inchworm_to_frankendata(G_nx, num_districts: int | None = None):
+def inchworm_to_frankendata(G_nx, num_districts: int = 1):
     """
     Minimal adapter: NetworkX (inchworm) -> FrankenData
     - Social edges/weights: passed as None
@@ -114,12 +114,11 @@ def inchworm_to_frankendata(G_nx, num_districts: int | None = None):
     nodes = sorted(G_nx.nodes())
     idx = {n: i for i, n in enumerate(nodes)}
     N = len(nodes)
-
-    # ----- dist_label (zero-based)
-    dist = np.asarray([G_nx.nodes[n].get("district", 1) for n in nodes], dtype=np.int64)
-    K = int(dist.max()) if num_districts is None else int(num_districts)
-    dist_label = (dist - 1).astype(np.int64)
-
+    D = max(1, int(num_districts))
+    
+    # placeholders required by FrankenData
+    dist_label = np.zeros(N, dtype=np.int64)  # everyone in district 0; env will ignore via your assignment matrix
+    
     # ----- opinion (N,1) float32
     opin = np.asarray([G_nx.nodes[n].get("opinion", 0.0) for n in nodes], dtype=np.float32)
     opinion = opin[:, None]  # (N,1)
@@ -159,7 +158,9 @@ def inchworm_to_frankendata(G_nx, num_districts: int | None = None):
     social_edge = np.empty((2, 0), dtype=np.int64)
     edge_attr = np.empty((0,), dtype=np.float32)
     orig_edge_num = 0
-    reps = [-1] * K
+    
+    reps = [-1] * D
+
 
     # ----- build FrankenData (cast only where necessary)
     fd_inch = FrankenData(
@@ -168,8 +169,8 @@ def inchworm_to_frankendata(G_nx, num_districts: int | None = None):
         orig_edge_num=int(orig_edge_num),          # 0
         opinion=opinion,                           # (N,1)
         pos=pos,                                   # (N,2)
-        reps=reps,                                 # list length K
         dist_label=dist_label,                     # (N,)
+        reps=reps,                                 # list length K
         edge_attr=edge_attr,                       # None
         geo_edge_attr=geo_edge_attr,               # (E_geo,)
     )

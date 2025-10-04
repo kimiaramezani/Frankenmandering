@@ -106,13 +106,14 @@ def build_inchworm_init_data():
     # Opinions (no scaling; converter only reshapes to (N,1))
     opinions = {0:0, 1:0, 2:0, 3:1, 4:2, 5:3, 6:4, 7:5, 8:5, 9:5}
     nx.set_node_attributes(G_inch, opinions, name="opinion")
-
-    # Districts (1..K; converter zero-bases internally)
-    districts = {0:1, 1:2, 2:2, 3:2, 4:3, 5:4, 6:5, 7:6, 8:8, 9:2}
-    nx.set_node_attributes(G_inch, districts, name="district")
+    
+    # We will not use these district labels in the env; hardcoded district lists are used instead
 
     # Convert to FrankenData (social edges remain empty; geo edges populated)
-    init_data = inchworm_to_frankendata(G_inch, num_districts=None)
+    init_data = inchworm_to_frankendata(G_inch)
 
     return init_data, G_inch
+
+
+
 
