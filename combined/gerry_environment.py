@@ -72,7 +72,7 @@ class FrankenData(Data):
     self.geographical_edge = torch.as_tensor(geographical_edge, dtype=torch.long)
     self.geo_edge_attr   = torch.as_tensor(geo_edge_attr, dtype=torch.float32)  # (E,)
 
-    self.reps = list(reps)  # list of length K-number_of_districts, each is int or None
+    self.reps = None  # list of length K-number_of_districts, each is int or None
 
     # kwargs may include things like: hetero=HeteroData
     for k, v in kwargs.items():

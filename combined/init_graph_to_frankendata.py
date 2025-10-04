@@ -78,8 +78,8 @@ def graph_to_frankendata(G,
     # assignment = np.zeros((N, D), dtype=np.float32)
     # assignment[np.arange(N), zero_based] = 1.0   # one-hot rows
 
-    # --- set initial representatives (D,)
-    reps = [-1]*D  # -1 means "not yet elected"
+    # --- set initial representatives to None
+    reps = None 
     
     # --- Build FrankenData (NOTE: kw names must match class __init__)
     fd = FrankenData(
@@ -159,7 +159,7 @@ def inchworm_to_frankendata(G_nx, num_districts: int = 1):
     edge_attr = np.empty((0,), dtype=np.float32)
     orig_edge_num = 0
     
-    reps = [-1] * D
+    reps = None
 
 
     # ----- build FrankenData (cast only where necessary)

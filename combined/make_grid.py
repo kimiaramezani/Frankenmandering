@@ -503,7 +503,7 @@ class Graph:
         return soc_df_dir
 
     def initial_reps(self, K: int):
-        return -1 * K
+        return None
     
     def update_union_graph(self, *, carry_layer_flags: bool = True, directed: bool = False):
         self.G = nx.DiGraph() if directed else nx.Graph()
@@ -556,7 +556,7 @@ class Graph:
         if 'district' in self.df_nodes.columns:
             data['node'].district = torch.tensor(self.df_nodes['district'].to_numpy(), dtype=torch.long)
         
-        data['reps'] = torch.tensor(self.initial_reps(K=3), dtype=torch.long)  # placeholder
+        data['reps'] = None  # placeholder
             
         # GEO
         if self.df_edges_geo is not None and not self.df_edges_geo.empty:
