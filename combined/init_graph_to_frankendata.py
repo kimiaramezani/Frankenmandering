@@ -100,7 +100,7 @@ def graph_to_frankendata(G,
     return fd
 
 
-def inchworm_to_frankendata(G_nx, num_districts: int = 1):
+def inchworm_to_frankendata(G_nx):
     """
     Pass-through converter: read everything from the NX graph and forward to FrankenData.
     - Opinions from node attr 'opinion' (default 0.0) -> (N,1) float32
