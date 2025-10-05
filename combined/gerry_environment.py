@@ -179,7 +179,7 @@ class FrankenmanderingEnv(gym.Env):
         reps = elect_representatives(dist_label, self.FrankenData.opinion, self.num_districts)
         #partial reset augmented graph
         social_graph = self.FrankenData.social_edge[:, :self.FrankenData.orig_edge_num]
-
+        # print('social_graph',social_graph)
         social_edge_attr = self.FrankenData.edge_attr[:self.FrankenData.orig_edge_num]
 
         # update social graph based on reps and new assignment
@@ -349,7 +349,7 @@ def opinion_update(edge_index_aug, edge_attr, opinion: np.ndarray,eps_indiff, ep
 
     updates = np.zeros_like(opinion)
     norm_factors = np.zeros((N, 1)) #Z
-
+    # print('edge_index_aug',edge_index_aug)
     for e in range(edge_index_aug.shape[1]):
         u, v = edge_index_aug[:, e]
         w = edge_attr[e]
@@ -361,16 +361,16 @@ def opinion_update(edge_index_aug, edge_attr, opinion: np.ndarray,eps_indiff, ep
         dist = np.linalg.norm(diff, 2)
 
         if dist > 1e-8:  # avoid division by zero
-            # assim_shift = np.sign(dist)
-            # back_shift = -np.sign(dist)
+           
             mu = drf(dist,eps_indiff, eps_assim, eps_backfire , eps_irrel, eps_amb, assim_shift, back_shift, indiff_shift, amb_shift, irr_shift)
 
             direction = (diff / dist).numpy()      # unit vector (direction only)
 
             # influence: u influences v
             updates[v] += mu * w * direction
-            norm_factors[v] += abs(w)
+            norm_factors[v] += abs(w)* abs(mu)
 
+            
     # apply updates with normalization
     for v in range(N):
         if norm_factors[v] > 0:
@@ -392,10 +392,10 @@ def opinion_update(edge_index_aug, edge_attr, opinion: np.ndarray,eps_indiff, ep
 def drf(discrepancy, eps_indiff, eps_assim, eps_backfire , eps_irrel, eps_amb, assim_shift, back_shift, indiff_shift, amb_shift, irr_shift):
     delta = abs(discrepancy)
 
-    if 0 <= delta <= eps_indiff:
+    if 0 <= delta < eps_indiff:
         return indiff_shift  # indifference
 
-    elif eps_indiff < delta < eps_assim:
+    elif eps_indiff <= delta < eps_assim:
         return assim_shift  # assimilation (pull closer)
 
     elif eps_backfire <= delta < eps_irrel:
