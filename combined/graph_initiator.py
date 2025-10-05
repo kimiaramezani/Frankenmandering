@@ -113,7 +113,7 @@ def build_inchworm_init_data():
     G_inch.graph["orig_edge_num"] = G_inch.graph["social_edge"].shape[1]  # 0 if empty
     
     
-    G_inch.graph["dist_label"]  = None
+    G_inch.graph["dist_label"]  = np.array([1,1,0,0,1,2,2,2,3,0])
     G_inch.graph["reps"]        = None
     
     # Convert to FrankenData (social edges remain empty; geo edges populated)
@@ -169,7 +169,7 @@ def build_inchworm_soc_init_data():
     G_inch.graph["social_edge"]   = social_edge
     G_inch.graph["edge_attr"]     = edge_attr
     G_inch.graph["orig_edge_num"] = int(social_edge.shape[1])  # number of directed arcs
-    G_inch.graph["dist_label"]    = None
+    G_inch.graph["dist_label"]    = np.array([1,1,0,0,1,2,2,2,3,0])
     G_inch.graph["reps"]          = None
 
     # ---------- Convert (pass-through) ----------
