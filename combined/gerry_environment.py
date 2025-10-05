@@ -31,8 +31,6 @@ Original file is located at
       - Reward: reduction in total distance to reference opinion c*
 """
 
-# !pip install torch_geometric
-
 import numpy as np
 import torch
 from torch_geometric.data import Data
