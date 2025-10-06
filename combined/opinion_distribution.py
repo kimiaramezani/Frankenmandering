@@ -23,9 +23,57 @@ HBO_INFL = 0.8
 SCALE_OUT = 7.0          # opinions in 0..7 (matches your converter default)
 MIN_MANHATTAN = 3        # spacing constraint for seed selection
 
+Beta1 = 0.1
+Beta2 = 0.5
+
 # DRF hyperparameters (example; tune as needed)
-eps_indiff, eps_assim, eps_backfire, eps_irrel, eps_amb = 0, 3.0, 3.0, 200.0, 0.0
-assim_shift, back_shift, indiff_shift, amb_shift, irr_shift = 1, -1, 0.0, 0.0, 0.0
+def drf_fig1(discrepancy):
+    delta = abs(discrepancy)
+ 
+    if 0 <= delta <=1 :
+        return 0  # indifference
+ 
+    elif 1 < delta <= 2:
+        return delta-1 # assimilation (y = x-1)
+ 
+    elif 2 < delta <= 3:
+        return 1 # assimilation (y = 1)
+ 
+    elif 3 < delta <= 3.2:
+        return -2*delta + 7 # assimilation (y=−2x+7)
+ 
+    elif 3.2 < delta < 3.8:
+        return 0  # ambivalence
+ 
+    elif 3.8 <= delta < 5:
+        return -1  # backfire
+ 
+    elif 5 <= delta < 6:
+        return  delta - 6 # backfire
+ 
+    elif 6 >= delta  :
+        return 0  # irrelevance (ignored)
+
+def drf_fig4(discrepancy):
+    delta = abs(discrepancy)
+ 
+    if 0 <= delta < 2:
+        return 0  # indifference
+ 
+    elif 2 <= delta < 4:
+        return 1  # assimilation (pull closer)
+ 
+    elif 4 <= delta < 6:
+        return -1  # backfire (push away)
+ 
+    elif 6 <= delta  :
+        return 0  # irrelevance (ignored)
+ 
+    elif delta <= 2:
+        return 0  # ambivalence
+
+# eps_indiff, eps_assim, eps_backfire, eps_irrel, eps_amb = 0, 3.0, 3.0, 200.0, 0.0
+# assim_shift, back_shift, indiff_shift, amb_shift, irr_shift = 1, -1, 0.0, 0.0, 0.0
 
 RNG = np.random.default_rng(1234)
 
@@ -82,7 +130,7 @@ def fd_with_labels(G, K: int, labels: np.ndarray):
         use_scaled_opinion=True, attach_hetero=False
     )
 
-def op_diff(fd, K: int, steps: int, drf_params):
+def op_diff(fd, K: int, steps: int, drf,Beta1,Beta2) -> float:
     """
     Run `steps` with a static (hard) assignment equal to fd.dist_label.
     Collect final distance-to-ideal (sum of L2 norms to c*).
@@ -115,7 +163,7 @@ def op_diff(fd, K: int, steps: int, drf_params):
     print(f"t= 0 (pre-step)  sum|x|={step_sum:.3f}")
 
     for t in range(steps):
-        obs, reward, terminated, truncated, info = env.step(action, *drf_params)
+        obs, reward, terminated, truncated, info = env.step(action, drf_fig4, Beta1, Beta2)
 
         # ---- DEBUG PEEK: after this step ----
         # choose any checkpoints you want; these hit early/mid/last
@@ -128,7 +176,7 @@ def op_diff(fd, K: int, steps: int, drf_params):
             break
 
     x_final = np.asarray(obs.opinion)
-    print(f"x_final sample: {x_final.shape} ...")
+    print(f"x_final sample: {x_final} ...")
     # final distance to c*
     final_dist = (np.linalg.norm(x_final - c_star, axis=1).sum())/(env.num_voters)
 
@@ -136,22 +184,22 @@ def op_diff(fd, K: int, steps: int, drf_params):
     return float(final_dist)
 
 def main():
-    drf_params = (
-        eps_indiff, eps_assim, eps_backfire, eps_irrel, eps_amb,
-        assim_shift, back_shift, indiff_shift, amb_shift, irr_shift
-    )
+    # drf_params = (
+    #     eps_indiff, eps_assim, eps_backfire, eps_irrel, eps_amb,
+    #     assim_shift, back_shift, indiff_shift, amb_shift, irr_shift
+    # )
     results = []   # list of final distances across all (f, m)
     meta = []      # optional: (f_id, m_id)
 
     for f_id in range(F):
-        seed = int(RNG.integers(0, 10_000_000))
-        fd_world, G = sample_world(K, H, W, seed)  # f
+        seed = int(RNG.integers(0, 100000))
+        fd_world, G = sample_world(K, H, W, seed)  # f_id
         # generate M maps for this world
         labels_list = random_maps_for_world(G, K, M_per_f, base_seed=seed + 1000)
 
         for m_id, labels in enumerate(labels_list):
             fd = fd_with_labels(G, K, labels)      # (f, m) as FrankenData
-            d = op_diff(fd, K, STEPS, drf_params)
+            d = op_diff(fd, K, STEPS, drf=drf_fig4, Beta1=Beta1, Beta2=Beta2)
             results.append(d)
             meta.append((f_id, m_id))
 
