@@ -102,7 +102,7 @@ def op_diff(fd, K: int, steps: int, drf_params):
 
     # ---- DEBUG PEEK: t=0 (before any update) ----
     x_t = np.asarray(obs.opinion)
-    step_sum = np.linalg.norm(x_t, axis=1).sum()
+    step_sum = np.linalg.norm(x_t - c_star, axis=1).sum() / (env.num_voters)
     print(f"t= 0 (pre-step)  sum|x|={step_sum:.3f}")
 
     for t in range(steps):
@@ -112,15 +112,18 @@ def op_diff(fd, K: int, steps: int, drf_params):
         # choose any checkpoints you want; these hit early/mid/last
         if t in (0, steps//2 - 1, steps - 1):
             x_t = np.asarray(obs.opinion)
-            step_sum = np.linalg.norm(x_t, axis=1).sum()
+            step_sum = np.linalg.norm(x_t - c_star, axis=1).sum() / (env.num_voters)
             print(f"t={t+1:3d} (post-step) sum|x|={step_sum:.3f}")
 
         if terminated or truncated:
             break
 
     x_final = np.asarray(obs.opinion)
+    print(f"x_final sample: {x_final.shape} ...")
     # final distance to c*
     final_dist = (np.linalg.norm(x_final - c_star, axis=1).sum())/(env.num_voters)
+
+    # Histogram of the averages across runs
     return float(final_dist)
 
 def main():
