@@ -6,6 +6,7 @@ from typing import List, Tuple
 from gerry_environment import FrankenmanderingEnv
 from graph_initiator import build_init_data
 from init_graph_to_frankendata import graph_to_frankendata
+# from mcmc_baseline import labels_to_action, proposal_flip,
 
 # -------------------- knobs --------------------
 K = 6                    # districts per world f
@@ -28,12 +29,20 @@ assim_shift, back_shift, indiff_shift, amb_shift, irr_shift = 1, -1, 0.0, 0.0, 0
 
 RNG = np.random.default_rng(1234)
 
-def one_hot_from_labels(labels: np.ndarray, K: int) -> np.ndarray:
-    """(N,) -> (N, K) hard one-hot (static assignment)."""
-    N = labels.shape[0]
-    A = np.zeros((N, K), dtype=np.float32)
-    valid = (labels >= 0) & (labels < K)
-    A[np.arange(N)[valid], labels[valid]] = 1.0
+def labels_to_action(labels, num_districts, dtype=np.float32):
+    """
+    Convert an integer label vector (shape [N]) to an action matrix
+    expected by env.step: shape (N, num_districts), each row is
+    a 1-hot encoding of the desired district for that voter.
+    """
+    N = len(labels)
+    A = np.zeros((N, num_districts), dtype=dtype)
+    for i, lab in enumerate(labels):
+        if lab >= 0 and lab < num_districts:
+            A[i, int(lab)] = 1.0
+        else:
+            # keep row zeros -> will become -1 label in env.step (avoid if possible)
+            pass
     return A
 
 def sample_world(K: int, H: int, W: int, seed: int):
@@ -96,7 +105,7 @@ def op_diff(fd, K: int, steps: int, drf_params):
 
     # static one-hot action from initial labels
     labels = np.asarray(fd.dist_label, dtype=np.int32)
-    action = one_hot_from_labels(labels, K)
+    action = labels_to_action(labels, K)
 
     obs, info = env.reset()
 
