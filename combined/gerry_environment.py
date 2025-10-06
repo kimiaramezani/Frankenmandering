@@ -160,7 +160,8 @@ class FrankenmanderingEnv(gym.Env):
 
         return self.FrankenData, {}
 
-    def step(self, action: np.ndarray, DRF):
+    def step(self, action: np.ndarray, DRF,Beta1,Beta2):
+
         if self.FrankenData is None:
             raise RuntimeError("Environment must be reset before calling step.")
 
@@ -189,7 +190,8 @@ class FrankenmanderingEnv(gym.Env):
         # Update oppinion
         x_new = opinion_update(aug_edge_index, aug_edge_attr,self.FrankenData.opinion, DRF )
 
-        reward = self.reward(self.FrankenData.opinion, x_new, dist_label, self.FrankenData.geographical_edge)
+        reward = self.reward(self.FrankenData.opinion, x_new, dist_label, self.FrankenData.geographical_edge,Beta1,Beta2)
+
         self.t += 1
         self.opinion_update_step +=1
         terminated = self.t >= self.horizon
@@ -207,12 +209,12 @@ class FrankenmanderingEnv(gym.Env):
             )
         return self.FrankenData, float(reward), terminated, False, {}
 
-    def reward(self, old_opinion,new_opinion, dist_label, geo_edge, a= 0.1, b =0.5):
+    def reward(self, old_opinion,new_opinion, dist_label, geo_edge, Beta1,Beta2):
         # check the population equity and compactness constraints
         pop_dev = population_equality(np.ones_like(dist_label),dist_label, self.num_districts)
         comp_score = compactness_score(geo_edge, dist_label)
 
-        penalty =  -a * pop_dev - b * comp_score
+        penalty =  -Beta1 * pop_dev - Beta2 * comp_score
 
         old_d=np.linalg.norm(old_opinion-self.c_star,axis=1).sum()
         new_d=np.linalg.norm(new_opinion-self.c_star,axis=1).sum()
@@ -236,6 +238,11 @@ Args:
 
 """
 
+<<<<<<< HEAD
+=======
+import numpy as np
+
+>>>>>>> e30947d4a791d4fc17fbb35a80746e5d916b755b
 def elect_representatives(dist_label: np.ndarray, opinion: np.ndarray, num_districts: int):
 
     reps = [None] * num_districts
