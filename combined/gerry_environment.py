@@ -238,11 +238,6 @@ Args:
 
 """
 
-<<<<<<< HEAD
-=======
-import numpy as np
-
->>>>>>> e30947d4a791d4fc17fbb35a80746e5d916b755b
 def elect_representatives(dist_label: np.ndarray, opinion: np.ndarray, num_districts: int):
 
     reps = [None] * num_districts
