@@ -384,7 +384,7 @@ class Graph:
         # Build initial frontiers N_j(t) from G_geo.neighbors (geo graph)
         frontiers = [set() for _ in range(K)]  # indices 0..K-1
         for j, nid in enumerate(seed_ids):
-            for u in self.G_geo.neighbors(nid):
+            for u in sorted(self.G_geo.neighbors(nid)):
                 if not assigned[u]:
                     frontiers[j].add(u)
 
@@ -408,7 +408,7 @@ class Graph:
                             assigned[u] = True
                             n_assigned += 1
                             # update frontiers
-                            for w in self.G_geo.neighbors(u):
+                            for w in sorted(self.G_geo.neighbors(u)):
                                 if not assigned[w]:
                                     frontiers[j].add(w)
                             for jj in range(K):
@@ -432,7 +432,7 @@ class Graph:
             p = sizes / S
             j_choice = int(rng.choice(np.arange(K), p=p))
             # Pick a cell uniformly from that frontier (eq. 9 sampling over N_j)
-            u = int(rng.choice(list(frontiers[j_choice])))
+            u = int(rng.choice(np.array(sorted(frontiers[j_choice]), dtype=int)))
             labels[u] = j_choice
             assigned[u] = True
             n_assigned += 1
@@ -480,7 +480,7 @@ class Graph:
             raise ValueError(f"N={N} must be at least {m+1} for BA model")
 
         # --- 1) BA (undirected)
-        G_ba = nx.barabasi_albert_graph(N, m, seed=rng_seed)
+        G_ba = nx.barabasi_albert_graph(N, m, seed=int(rng_seed))
         E_und = G_ba.number_of_edges()
         print(f"BA (undirected) edges: {E_und} (expected m*(N-m) = {m}*({N}-{m}) = {m*(N-m)})")
 

@@ -62,7 +62,7 @@ def build_init_data(
 
     # 5) HBO opinions (writes 'opinion' and, with scale_out, 'opinion_scaled')
     G.fill_opinions_hbo_graph(alpha=hbo_alpha, beta=hbo_beta,
-                              influence=hbo_influence, scale_out=scale_out)
+                              influence=hbo_influence, scale_out=scale_out, rng_seed=rng_seed)
 
     # 6) District labels
     seeds = G.choose_random_district_seeds_spaced(K=K, min_manhattan=min_manhattan)

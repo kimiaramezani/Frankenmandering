@@ -15,6 +15,10 @@ F = 5                   # number of worlds to sample
 M_per_f = 3             # number of random districtings per world
 STEPS = 100              # env steps per (f, m)
 
+# ---- Deterministic seed schedules ----
+F_SEEDS = np.arange(1000, 1000 + F, dtype=int)     # world seeds: 1000..1000+F-1
+M_BASE  = 5000 
+
 # GEO & SOCIAL configs
 NEIGHBORHOOD = "rook"    # or "queen"
 BA_m = 2                 # Barabási–Albert parameter
@@ -42,16 +46,16 @@ def drf_fig1(discrepancy):
     elif 3 < delta <= 3.2:
         return -2*delta + 7 # assimilation (y=−2x+7)
  
-    elif 3.2 < delta < 3.8:
+    elif 3.2 < delta < 4:
         return 0  # ambivalence
  
-    elif 3.8 <= delta < 5:
+    elif 4 <= delta < 5:
         return -1  # backfire
  
     elif 5 <= delta < 6:
         return  delta - 6 # backfire
  
-    elif 6 >= delta  :
+    elif 6 <= delta  :
         return 0  # irrelevance (ignored)
 
 def drf_fig4(discrepancy):
@@ -75,7 +79,7 @@ def drf_fig4(discrepancy):
 # eps_indiff, eps_assim, eps_backfire, eps_irrel, eps_amb = 0, 3.0, 3.0, 200.0, 0.0
 # assim_shift, back_shift, indiff_shift, amb_shift, irr_shift = 1, -1, 0.0, 0.0, 0.0
 
-RNG = np.random.default_rng(1234)
+# RNG = np.random.default_rng(1234)
 
 def labels_to_action(labels, num_districts, dtype=np.float32):
     """
@@ -97,13 +101,14 @@ def sample_world(K: int, H: int, W: int, seed: int):
     """
     Build one world f = (geography + opinions + social).
     Returns (FrankenData, Graph) so we can regenerate many district maps on the same f.
+    Deterministic world f = (geography + opinions + social).
     """
     fd, G = build_init_data(
-        K=K, H=H, W=W, ba_m=BA_m, rng_seed=seed,
+        K=K, H=H, W=W, ba_m=BA_m, rng_seed=seed, # <— world seed drives BOTH social & opinions
         neighborhood=NEIGHBORHOOD,
         hbo_alpha=HBO_ALPHA, hbo_beta=HBO_BETA, hbo_influence=HBO_INFL,
         scale_out=SCALE_OUT, min_manhattan=MIN_MANHATTAN,
-        attach_hetero=False, use_scaled_opinion=True,
+        attach_hetero=False, use_scaled_opinion=True
     )
     return fd, G
 
@@ -111,11 +116,13 @@ def random_maps_for_world(G, K: int, m_count: int, base_seed: int) -> List[np.nd
     """
     Generate m_count random district labelings for the same world f
     by reseeding the spaced-seed picker + greedy fill each time.
+    Deterministic maps for this world: seed_j = base_seed + j.
     """
     labels_list = []
     for j in range(m_count):
-        seeds = G.choose_random_district_seeds_spaced(K, min_manhattan=MIN_MANHATTAN, rng_seed=base_seed + j)
-        labels = G.greedy_fill_districts(seeds, rng_seed=base_seed + j)
+        s = base_seed + j
+        seeds = G.choose_random_district_seeds_spaced(K, min_manhattan=MIN_MANHATTAN, rng_seed=s)
+        labels = G.greedy_fill_districts(seeds, rng_seed=s)
         labels_list.append(labels.copy())
     return labels_list
 
@@ -159,8 +166,9 @@ def op_diff(fd, K: int, steps: int, drf,Beta1,Beta2) -> float:
 
     # ---- DEBUG PEEK: t=0 (before any update) ----
     x_t = np.asarray(obs.opinion)
-    step_sum = np.linalg.norm(x_t - c_star, axis=1).sum() / (env.num_voters)
-    print(f"t= 0 (pre-step)  sum|x|={step_sum:.3f}")
+    # Initial L2 distance to c* (per voter average) measured before applying any step 
+    init_dist = np.linalg.norm(x_t - c_star, axis=1).sum() / (env.num_voters)
+    print(f"Initial Distance:t= 0 (pre-step)  sum|x|={init_dist:.3f}")
 
     for t in range(steps):
         obs, reward, terminated, truncated, info = env.step(action, drf_fig4, Beta1, Beta2)
@@ -176,9 +184,12 @@ def op_diff(fd, K: int, steps: int, drf,Beta1,Beta2) -> float:
             break
 
     x_final = np.asarray(obs.opinion)
-    print(f"x_final sample: {x_final} ...")
+    print(f"x_final mean: {x_final.mean()} ...")
     # final distance to c*
     final_dist = (np.linalg.norm(x_final - c_star, axis=1).sum())/(env.num_voters)
+    print(f"Final distance:", final_dist)
+    print(f"Final distance = Step Sum 100:", final_dist == step_sum)
+    print(f"Final - Initial:", final_dist - init_dist)
 
     # Histogram of the averages across runs
     return float(final_dist)
@@ -189,19 +200,23 @@ def main():
     #     assim_shift, back_shift, indiff_shift, amb_shift, irr_shift
     # )
     results = []   # list of final distances across all (f, m)
-    meta = []      # optional: (f_id, m_id)
+    meta = []      # optional: (f_id, m_id, f_seed, m_seed)
 
-    for f_id in range(F):
-        seed = int(RNG.integers(0, 100000))
-        fd_world, G = sample_world(K, H, W, seed)  # f_id
-        # generate M maps for this world
-        labels_list = random_maps_for_world(G, K, M_per_f, base_seed=seed + 1000)
+    for f_id, f_seed in enumerate(F_SEEDS):
+        fd_world, G = sample_world(K, H, W, f_seed)
+
+        # Per-world deterministic map seeds: e.g., 200000 + f_id*10000 + j
+        M_SEED_BASE = M_BASE + f_id * 10_000
+
+        labels_list = random_maps_for_world(G, K, M_per_f, base_seed=M_SEED_BASE)
 
         for m_id, labels in enumerate(labels_list):
-            fd = fd_with_labels(G, K, labels)      # (f, m) as FrankenData
+            # write labels to G and export FrankenData
+            fd = fd_with_labels(G, K, labels)
+
             d = op_diff(fd, K, STEPS, drf=drf_fig4, Beta1=Beta1, Beta2=Beta2)
             results.append(d)
-            meta.append((f_id, m_id))
+            meta.append((f_id, m_id, f_seed, M_SEED_BASE + m_id))
 
     results = np.asarray(results, dtype=np.float64)
     print(f"Samples: {results.size}")
