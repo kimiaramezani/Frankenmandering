@@ -1,0 +1,64 @@
+=== GLOBAL MCMC REPORT ===
+
+Total runs: 100
+Best final reward: 2.650 (Run 17)
+
+Average Statistics:
+  final_reward: mean=1.5511, std=0.3843
+  avg_accept_rate: mean=0.4063, std=0.0682
+  avg_dist_from_ideal: mean=3.2870, std=0.1618
+  ratio_shift_macro: mean=0.0053, std=0.0063
+  ratio_shift_micro: mean=0.0871, std=0.0436
+
+Correlations:
+                      run_id   seed  final_reward  avg_accept_rate  \
+run_id                 1.000  1.000         0.064           -0.118   
+seed                   1.000  1.000         0.064           -0.118   
+final_reward           0.064  0.064         1.000           -0.152   
+avg_accept_rate       -0.118 -0.118        -0.152            1.000   
+chain_length          -0.157 -0.157        -0.389            0.813   
+initial_mean_opinion     NaN    NaN           NaN              NaN   
+final_mean_opinion    -0.046 -0.046         0.529            0.043   
+delta_opinion         -0.046 -0.046         0.529            0.043   
+avg_dist_from_ideal    0.046  0.046        -0.529           -0.043   
+ratio_shift_macro     -0.006 -0.006         0.565           -0.162   
+ratio_shift_micro     -0.029 -0.029         0.068           -0.269   
+
+                      chain_length  initial_mean_opinion  final_mean_opinion  \
+run_id                      -0.157                   NaN              -0.046   
+seed                        -0.157                   NaN              -0.046   
+final_reward                -0.389                   NaN               0.529   
+avg_accept_rate              0.813                   NaN               0.043   
+chain_length                 1.000                   NaN               0.026   
+initial_mean_opinion           NaN                   NaN                 NaN   
+final_mean_opinion           0.026                   NaN               1.000   
+delta_opinion                0.026                   NaN               1.000   
+avg_dist_from_ideal         -0.026                   NaN              -1.000   
+ratio_shift_macro           -0.265                   NaN               0.200   
+ratio_shift_micro           -0.318                   NaN              -0.057   
+
+                      delta_opinion  avg_dist_from_ideal  ratio_shift_macro  \
+run_id                       -0.046                0.046             -0.006   
+seed                         -0.046                0.046             -0.006   
+final_reward                  0.529               -0.529              0.565   
+avg_accept_rate               0.043               -0.043             -0.162   
+chain_length                  0.026               -0.026             -0.265   
+initial_mean_opinion            NaN                  NaN                NaN   
+final_mean_opinion            1.000               -1.000              0.200   
+delta_opinion                 1.000               -1.000              0.200   
+avg_dist_from_ideal          -1.000                1.000             -0.200   
+ratio_shift_macro             0.200               -0.200              1.000   
+ratio_shift_micro            -0.057                0.057              0.061   
+
+                      ratio_shift_micro  
+run_id                           -0.029  
+seed                             -0.029  
+final_reward                      0.068  
+avg_accept_rate                  -0.269  
+chain_length                     -0.318  
+initial_mean_opinion                NaN  
+final_mean_opinion               -0.057  
+delta_opinion                    -0.057  
+avg_dist_from_ideal               0.057  
+ratio_shift_macro                 0.061  
+ratio_shift_micro                 1.000  
