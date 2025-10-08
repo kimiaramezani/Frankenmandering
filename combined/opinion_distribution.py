@@ -218,7 +218,7 @@ def main():
                "K": int(K), "H": int(H), "W": int(W),
                "F": int(F), "M_per_f": int(M_per_f),
                "STEPS": int(STEPS),
-               "CSTAR_LIST": list(map(float, c_star_list))}
+               "c_star_list": list(map(float, c_star_list))}
     )
 
     # 2) CREATE a new run subgroup under /runs
