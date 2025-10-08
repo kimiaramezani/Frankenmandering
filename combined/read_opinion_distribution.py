@@ -4,6 +4,11 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import zarr
 
+# If DRF_f1 then use these paths
+# EXP_PATH = r"F:\Carleton University\Prof Zinovi RA\Code\artifacts_zarr_drf_1\exp-K6_H8xW9_F30_M30_S100_drf_f1_mad.zarr"
+# RUN_NAME = "run-20251008-093608-b03dc421"   # or "run-20251008-..." if you used time-based ids
+
+# If DRF_f4 then use these paths
 EXP_PATH = r"F:\Carleton University\Prof Zinovi RA\Code\artifacts_zarr_drf_4\exp-K6_H8xW9_F30_M30_S100_drf_f4_mad.zarr"
 RUN_NAME = "run-20251008-045422-99883f15"   # or "run-20251008-..." if you used time-based ids
 
@@ -42,6 +47,10 @@ df = pd.DataFrame(rows).sort_values(["f","m","c"])
 print(df.shape)    # expect (F*M_per_f*len(c_star_list), 7) e.g., (2700, 7)
 
 # you can save to CSV if you want
+# If using drf_f1 then use this path
+# df.to_csv(f"F:/Carleton University/Prof Zinovi RA/Code/artifacts_zarr_drf_1/exp-K6_H8xW9_F30_M30_S100_drf_f1_mad.zarr/runs/run-20251008-093608-b03dc421/csv_and_histogram/{RUN_NAME}.csv", index=False)
+
+# If using drf_f4 then use this path
 df.to_csv(f"F:/Carleton University/Prof Zinovi RA/Code/artifacts_zarr_drf_4/exp-K6_H8xW9_F30_M30_S100_drf_f4_mad.zarr/runs/run-20251008-045422-99883f15/csv_and_histogram/{RUN_NAME}.csv", index=False)
 
 # 1) add a numeric c index and (optionally) the actual c* value
@@ -90,6 +99,12 @@ def plot_metric_by_c(df, metric, outdir=".", bins=30, drf=DRF_NAME):
     print(f"saved {fname}")
 
 # 3) make the three figures
+# If using drf_f1 then use this path
+# plot_metric_by_c(df, "init_mad",  outdir=f"F:/Carleton University/Prof Zinovi RA/Code/artifacts_zarr_drf_1/exp-K6_H8xW9_F30_M30_S100_drf_f1_mad.zarr/runs/run-20251008-093608-b03dc421/csv_and_histogram")
+# plot_metric_by_c(df, "final_mad", outdir=f"F:/Carleton University/Prof Zinovi RA/Code/artifacts_zarr_drf_1/exp-K6_H8xW9_F30_M30_S100_drf_f1_mad.zarr/runs/run-20251008-093608-b03dc421/csv_and_histogram")
+# plot_metric_by_c(df, "delta_mad", outdir=f"F:/Carleton University/Prof Zinovi RA/Code/artifacts_zarr_drf_1/exp-K6_H8xW9_F30_M30_S100_drf_f1_mad.zarr/runs/run-20251008-093608-b03dc421/csv_and_histogram")
+
+# If using drf_f4 then use this path
 plot_metric_by_c(df, "init_mad",  outdir=f"F:/Carleton University/Prof Zinovi RA/Code/artifacts_zarr_drf_4/exp-K6_H8xW9_F30_M30_S100_drf_f4_mad.zarr/runs/run-20251008-045422-99883f15/csv_and_histogram")
 plot_metric_by_c(df, "final_mad", outdir=f"F:/Carleton University/Prof Zinovi RA/Code/artifacts_zarr_drf_4/exp-K6_H8xW9_F30_M30_S100_drf_f4_mad.zarr/runs/run-20251008-045422-99883f15/csv_and_histogram")
 plot_metric_by_c(df, "delta_mad", outdir=f"F:/Carleton University/Prof Zinovi RA/Code/artifacts_zarr_drf_4/exp-K6_H8xW9_F30_M30_S100_drf_f4_mad.zarr/runs/run-20251008-045422-99883f15/csv_and_histogram")
