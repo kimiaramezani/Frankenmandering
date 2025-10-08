@@ -70,7 +70,10 @@ class FrankenData(Data):
 
     # geographical edge is optional (allow None)
     self.geographical_edge = torch.as_tensor(geographical_edge, dtype=torch.long)
-    self.geo_edge_attr   = torch.as_tensor(geo_edge_attr, dtype=torch.float32)  # (E,)
+    geo_edge_attr = torch.as_tensor(geo_edge_attr, dtype=torch.float32)
+    if geo_edge_attr.ndim == 1:
+        geo_edge_attr = geo_edge_attr[:, None]  # promote to [E,1] for consistency
+    self.geo_edge_attr = geo_edge_attr  # now [E, C] where C=3 with your change
 
     self.reps = reps  # list of length K-number_of_districts, each is int or None
 

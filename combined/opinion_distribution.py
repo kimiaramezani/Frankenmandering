@@ -1,11 +1,16 @@
 # experiment_static_franken.py
 
+import json
 import numpy as np
 import torch
+import datetime
 from typing import List, Tuple
 from gerry_environment import FrankenmanderingEnv
 from graph_initiator import build_init_data
 from init_graph_to_frankendata import graph_to_frankendata
+from opinion_distribution_utils import (zarr_open_experiment_store, zarr_new_run_in_experiment, zarr_world_group, zarr_map_group, zarr_save_world_init,
+    zarr_save_step_from_env, zarr_write_summary, zarr_cstar_group)
+
 # from mcmc_baseline import labels_to_action, proposal_flip,
 
 # -------------------- knobs --------------------
@@ -14,6 +19,7 @@ H, W = 8, 9              # grid size for geography (N = H*W)
 F = 5                   # number of worlds to sample
 M_per_f = 3             # number of random districtings per world
 STEPS = 100              # env steps per (f, m)
+c_star_list = [0.0,3.5,7.0]   # your custom ideal (all static as defined here in R^m)
 
 # ---- Deterministic seed schedules ----
 F_SEEDS = np.arange(1000, 1000 + F, dtype=int)     # world seeds: 1000..1000+F-1
@@ -137,10 +143,11 @@ def fd_with_labels(G, K: int, labels: np.ndarray):
         use_scaled_opinion=True, attach_hetero=False
     )
 
+# We can delete this function as it is not used.
 def op_diff(fd, K: int, steps: int, drf,Beta1,Beta2) -> float:
     """
     Run `steps` with a static (hard) assignment equal to fd.dist_label.
-    Collect final distance-to-ideal (sum of L2 norms to c*).
+    Collect final distance-to-ideal (sum of MAD to c*).
     Also prints a few per-step magnitudes for sanity.
     """
     
@@ -166,8 +173,8 @@ def op_diff(fd, K: int, steps: int, drf,Beta1,Beta2) -> float:
 
     # ---- DEBUG PEEK: t=0 (before any update) ----
     x_t = np.asarray(obs.opinion)
-    # Initial L2 distance to c* (per voter average) measured before applying any step 
-    init_dist = np.linalg.norm(x_t - c_star, axis=1).sum() / (env.num_voters)
+    # Initial MAD distance to c* (per voter average) measured before applying any step
+    init_dist = float(np.mean(np.abs(np.squeeze(x_t) - np.squeeze(c_star))))
     print(f"Initial Distance:t= 0 (pre-step)  sum|x|={init_dist:.3f}")
 
     for t in range(steps):
@@ -177,57 +184,128 @@ def op_diff(fd, K: int, steps: int, drf,Beta1,Beta2) -> float:
         # choose any checkpoints you want; these hit early/mid/last
         if t in (0, steps//2 - 1, steps - 1):
             x_t = np.asarray(obs.opinion)
-            step_sum = np.linalg.norm(x_t - c_star, axis=1).sum() / (env.num_voters)
-            print(f"t={t+1:3d} (post-step) sum|x|={step_sum:.3f}")
+            step_mean = float(np.mean(np.abs(np.squeeze(x_t) - np.squeeze(c_star))))
+            print(f"t={t+1:3d} (post-step) sum|x|={step_mean:.3f}")
 
         if terminated or truncated:
             break
 
     x_final = np.asarray(obs.opinion)
-    print(f"x_final mean: {x_final.mean()} ...")
+    # print(f"x_final mean: {x_final.mean()} ...")
     # final distance to c*
-    final_dist = (np.linalg.norm(x_final - c_star, axis=1).sum())/(env.num_voters)
+    final_dist = float(np.mean(np.abs(np.squeeze(x_final) - np.squeeze(c_star))))
     print(f"Final distance:", final_dist)
-    print(f"Final distance = Step Sum 100:", final_dist == step_sum)
-    print(f"Final - Initial:", final_dist - init_dist)
+    print(f"Final distance = Step Mean 100:", final_dist == step_mean)
+    opinion_dist_change = final_dist - init_dist
+    print(f"opinion_dist_change = Final - Initial:", opinion_dist_change)
 
     # Histogram of the averages across runs
     return float(final_dist)
 
+def exp_slug(K,H,W,F,M_per_f,STEPS, drf_name="4", metric="mad"):
+    return f"exp-K{K}_H{H}xW{W}_F{F}_M{M_per_f}_S{STEPS}_{drf_name}_{metric}"
+
 def main():
-    # drf_params = (
-    #     eps_indiff, eps_assim, eps_backfire, eps_irrel, eps_amb,
-    #     assim_shift, back_shift, indiff_shift, amb_shift, irr_shift
-    # )
-    results = []   # list of final distances across all (f, m)
-    meta = []      # optional: (f_id, m_id, f_seed, m_seed)
+    # one Zarr run per experiment (keeps previous runs intact)
+    # (choose a root dir; or define ZARR_ROOT in utils and omit root_dir=)
+    # 1) OPEN (or create) the single experiment store
+    EXPERIMENT = exp_slug(K,H,W,F,M_per_f,STEPS, drf_name="drf_fig4", metric="mad")
+    root_exp, EXP_PATH = zarr_open_experiment_store(
+        root_dir="artifacts_zarr",
+        experiment_slug=EXPERIMENT,
+        overwrite=False,
+        attrs={"experiment": EXPERIMENT,
+               "K": int(K), "H": int(H), "W": int(W),
+               "F": int(F), "M_per_f": int(M_per_f),
+               "STEPS": int(STEPS),
+               "CSTAR_LIST": list(map(float, c_star_list))}
+    )
+
+    # 2) CREATE a new run subgroup under /runs
+    #    Use run_index if you want 000, 001, ...; or drop it to get time-based run ids.
+    g_run, RUN_NAME = zarr_new_run_in_experiment(
+        root_exp,
+        run_index=None,   # e.g., set to 34 to force /runs/run_034
+        attrs={"created_at": datetime.datetime.now().isoformat()}
+    )
+    print(f"[zarr] writing to {EXP_PATH} :: /runs/{RUN_NAME}")
+
+    # aggregate metrics across all (f, m, c)
+    finals = []
+    deltas = []
+    index  = []  # (f_id, m_id, c_idx)
 
     for f_id, f_seed in enumerate(F_SEEDS):
         fd_world, G = sample_world(K, H, W, f_seed)
+        g_f = zarr_world_group(g_run, f_id, int(f_seed))
 
-        # Per-world deterministic map seeds: e.g., 200000 + f_id*10000 + j
-        M_SEED_BASE = M_BASE + f_id * 10_000
-
+        M_SEED_BASE = M_BASE + f_id * 10
         labels_list = random_maps_for_world(G, K, M_per_f, base_seed=M_SEED_BASE)
 
+        pos_xy_init   = G.df_nodes[["x","y"]].to_numpy(np.float32)
+        node_ids_init = G.df_nodes["id"].to_numpy(np.int32)
+
         for m_id, labels in enumerate(labels_list):
-            # write labels to G and export FrankenData
             fd = fd_with_labels(G, K, labels)
+            g_m = zarr_map_group(g_f, m_id, int(M_SEED_BASE + m_id))
 
-            d = op_diff(fd, K, STEPS, drf=drf_fig4, Beta1=Beta1, Beta2=Beta2)
-            results.append(d)
-            meta.append((f_id, m_id, f_seed, M_SEED_BASE + m_id))
+            N, m = fd.opinion.shape
+            geo_edge    = np.asarray(fd.geographical_edge)
+            social_edge = np.asarray(fd.social_edge)
+            geo_attr    = getattr(fd, "geo_edge_attr", None)
+            soc_attr    = getattr(fd, "social_edge_attr", None)
 
-    results = np.asarray(results, dtype=np.float64)
-    print(f"Samples: {results.size}")
-    print(f"Mean:    {results.mean():.4f}")
-    print(f"Median:  {np.median(results):.4f}")
-    print(f"Std:     {results.std(ddof=1):.4f}")
-    for q in [5, 25, 50, 75, 95]:
-        print(f"p{q:02d}:   {np.percentile(results, q):.4f}")
-    print(f"Results: {results}")
+            for c_idx, c_val in enumerate(c_star_list):
+                c_star = np.full((N, m), float(c_val), dtype=np.float32)
+                g_c = zarr_cstar_group(g_m, c_idx, c_val)
 
-    # You can also save `results` for plotting a histogram later.
+                x0 = np.asarray(fd.opinion)
+                init_dist = float(np.mean(np.abs(np.squeeze(x0) - np.squeeze(c_star))))
+                zarr_save_world_init(g_c, fd=fd, G=G, c_star=c_star, init_dist=init_dist, compressor=None)
+
+                env = FrankenmanderingEnv(
+                    num_voters=N, num_districts=K, opinion_dim=m,
+                    horizon=STEPS, seed=0,
+                    FrankenData=fd, target_opinion=c_star,
+                )
+                action = labels_to_action(np.asarray(fd.dist_label, dtype=np.int32), K)
+                obs, info = env.reset()
+
+                CHECK_T = {1,25,50,75,100}
+                last_mean = None
+
+                for t in range(STEPS):
+                    obs, reward, terminated, truncated, info = env.step(action, drf_fig4, Beta1, Beta2)
+                    t_post = t + 1
+                    if t_post in CHECK_T:
+                        x_t = np.asarray(obs.opinion)
+                        mean_mad = float(np.mean(np.abs(np.squeeze(x_t) - np.squeeze(c_star))))
+                        last_mean = mean_mad
+                        zarr_save_step_from_env(
+                            g_c, t_post, env=env, c_star=c_star, mean_mad_to_cstar=mean_mad, compressor=None,
+                            geo_edge_override=geo_edge, social_edge_override=social_edge,
+                            geo_edge_attr_override=geo_attr, social_edge_attr_override=soc_attr,
+                            pos_xy_override=pos_xy_init, node_ids_override=node_ids_init,
+                            representatives_override=getattr(env, "last_representatives", None),
+                        )
+                    if terminated or truncated:
+                        break
+
+                x_final = np.asarray(obs.opinion)
+                final_dist = float(np.mean(np.abs(np.squeeze(x_final) - np.squeeze(c_star))))
+                delta = final_dist - init_dist
+
+                zarr_write_summary(g_c, final_dist, last_checkpoint_mean=last_mean)
+                g_c.require_group("summary").attrs["delta_mean_mad"] = float(delta)
+                g_c.require_group("summary").attrs["init_mean_mad_copy"] = float(init_dist)
+
+                finals.append(final_dist); deltas.append(delta); index.append((f_id, m_id, c_idx))
+
+    finals = np.asarray(finals, dtype=np.float64)
+    deltas = np.asarray(deltas, dtype=np.float64)
+    print(f"[done] Zarr written to: {EXP_PATH} :: /runs/{RUN_NAME}")
+    print(f"Final mean={finals.mean():.4f}, median={np.median(finals):.4f}")
+    print(f"Delta  mean={deltas.mean():.4f}, median={np.median(deltas):.4f}")
 
 if __name__ == "__main__":
     main()
