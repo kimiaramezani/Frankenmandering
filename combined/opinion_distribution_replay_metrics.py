@@ -65,6 +65,26 @@ def mean_abs_stats(opinion: np.ndarray, c_star: np.ndarray) -> Dict[str, float]:
         "mean_opinion": float(opinion.reshape(opinion.shape[0], -1).mean())
     }
 
+def step_metrics(opinion: np.ndarray, c_star: np.ndarray) -> Dict[str, float]:
+    X = np.asarray(opinion, dtype=np.float32)
+    C = np.asarray(c_star, dtype=np.float32)
+
+    mean_opinion_t = float(X.mean())
+    c_mean = float(C.mean())
+    shifted_mean_t = abs(mean_opinion_t - c_mean)
+
+    per_node_avg_abs = np.abs(X - C).mean(axis=1)  # (N,)
+    mad_t = float(per_node_avg_abs.mean())
+    sd_t  = float(per_node_avg_abs.std(ddof=0))
+
+    return {
+        "mad": mad_t,
+        "sd": sd_t,
+        "mean_opinion": mean_opinion_t,
+        "shifted_mean": shifted_mean_t,
+        "c_mean": c_mean,
+    }
+
 # ---- open run ----
 root = zarr.open_group(EXP_PATH, mode="r")
 g_run = root["runs"][RUN_NAME]
@@ -102,17 +122,12 @@ for f_key in sorted([k for k in g_run.keys() if k.startswith("f_")]):
             fd, _ = env.reset()
 
             # t=0 metrics (from world_init)
-            m0 = mean_abs_stats(fd.opinion, c_star)
-            rows.append({
-                "run": RUN_NAME,
-                "f_id": int(f_key.split("_")[1]),
-                "m_id": int(m_key.split("_")[1]),
-                "c_idx": int(c_key.split("_")[1]),
-                "step": 0,
-                "mean_opinion": m0["mean_opinion"],
-                "mad": m0["mad"],
-                "sd": m0["sd"]
-            })
+            m0 = step_metrics(fd.opinion, c_star)
+            rows.append({"run": RUN_NAME, "f_id": int(f_key.split("_")[1]), "m_id": int(m_key.split("_")[1]),
+                        "c_idx": int(c_key.split("_")[1]), "step": 0,
+                        "mean_opinion": m0["mean_opinion"], "mad": m0["mad"], "sd": m0["sd"],
+                        "shifted_mean": m0["shifted_mean"], "c_mean": m0["c_mean"],
+                    })
 
             # do 100 steps; use a no-op “keep labels” policy or your preferred policy
             # Here we just keep current labels (one-hot) to drive opinion dynamics via reps augmentation.
@@ -121,17 +136,12 @@ for f_key in sorted([k for k in g_run.keys() if k.startswith("f_")]):
                 # Supply DRF and Betas you used in original run (f1/f4, Beta1, Beta2); example:
                 fd, reward, terminated, truncated, info = env.step(action, DRF=DRF_FN, Beta1=Beta1, Beta2=Beta2)
 
-                mt = mean_abs_stats(fd.opinion, c_star)
-                rows.append({
-                    "run": RUN_NAME,
-                    "f_id": int(f_key.split("_")[1]),
-                    "m_id": int(m_key.split("_")[1]),
-                    "c_idx": int(c_key.split("_")[1]),
-                    "step": t,
-                    "mean_opinion": mt["mean_opinion"],
-                    "mad": mt["mad"],
-                    "sd": mt["sd"]
-                })
+                mt = step_metrics(fd.opinion, c_star)
+                rows.append({"run": RUN_NAME, "f_id": int(f_key.split("_")[1]), "m_id": int(m_key.split("_")[1]),
+                            "c_idx": int(c_key.split("_")[1]), "step": t,
+                            "mean_opinion": mt["mean_opinion"], "mad": mt["mad"], "sd": mt["sd"],
+                            "shifted_mean": mt["shifted_mean"], "c_mean": mt["c_mean"],
+                        })
 
 # save CSV
 df = pd.DataFrame(rows).sort_values(["f_id","m_id","c_idx","step"]).reset_index(drop=True)
