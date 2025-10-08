@@ -16,8 +16,8 @@ from opinion_distribution_utils import (zarr_open_experiment_store, zarr_new_run
 # -------------------- knobs --------------------
 K = 6                    # districts per world f
 H, W = 8, 9              # grid size for geography (N = H*W)
-F = 5                   # number of worlds to sample
-M_per_f = 3             # number of random districtings per world
+F = 30                   # number of worlds to sample
+M_per_f = 30             # number of random districtings per world
 STEPS = 100              # env steps per (f, m)
 c_star_list = [0.0,3.5,7.0]   # your custom ideal (all static as defined here in R^m)
 
@@ -37,7 +37,7 @@ Beta1 = 0.1
 Beta2 = 0.5
 
 # DRF hyperparameters (example; tune as needed)
-def drf_fig1(discrepancy):
+def drf_f1(discrepancy):
     delta = abs(discrepancy)
  
     if 0 <= delta <=1 :
@@ -64,7 +64,7 @@ def drf_fig1(discrepancy):
     elif 6 <= delta  :
         return 0  # irrelevance (ignored)
 
-def drf_fig4(discrepancy):
+def drf_f4(discrepancy):
     delta = abs(discrepancy)
  
     if 0 <= delta < 2:
@@ -178,7 +178,7 @@ def op_diff(fd, K: int, steps: int, drf,Beta1,Beta2) -> float:
     print(f"Initial Distance:t= 0 (pre-step)  sum|x|={init_dist:.3f}")
 
     for t in range(steps):
-        obs, reward, terminated, truncated, info = env.step(action, drf_fig4, Beta1, Beta2)
+        obs, reward, terminated, truncated, info = env.step(action, drf_f4, Beta1, Beta2)
 
         # ---- DEBUG PEEK: after this step ----
         # choose any checkpoints you want; these hit early/mid/last
@@ -209,7 +209,7 @@ def main():
     # one Zarr run per experiment (keeps previous runs intact)
     # (choose a root dir; or define ZARR_ROOT in utils and omit root_dir=)
     # 1) OPEN (or create) the single experiment store
-    EXPERIMENT = exp_slug(K,H,W,F,M_per_f,STEPS, drf_name="drf_fig4", metric="mad")
+    EXPERIMENT = exp_slug(K,H,W,F,M_per_f,STEPS, drf_name="drf_f4", metric="mad")
     root_exp, EXP_PATH = zarr_open_experiment_store(
         root_dir="artifacts_zarr",
         experiment_slug=EXPERIMENT,
@@ -275,7 +275,8 @@ def main():
                 last_mean = None
 
                 for t in range(STEPS):
-                    obs, reward, terminated, truncated, info = env.step(action, drf_fig4, Beta1, Beta2)
+                    # Change drf function here as per need
+                    obs, reward, terminated, truncated, info = env.step(action, drf_f4, Beta1, Beta2)
                     t_post = t + 1
                     if t_post in CHECK_T:
                         x_t = np.asarray(obs.opinion)
