@@ -143,64 +143,6 @@ def fd_with_labels(G, K: int, labels: np.ndarray):
         use_scaled_opinion=True, attach_hetero=False
     )
 
-# We can delete this function as it is not used.
-def op_diff(fd, K: int, steps: int, drf,Beta1,Beta2) -> float:
-    """
-    Run `steps` with a static (hard) assignment equal to fd.dist_label.
-    Collect final distance-to-ideal (sum of MAD to c*).
-    Also prints a few per-step magnitudes for sanity.
-    """
-    
-    # final distance to c* (env stores c*; opinions are in obs.opinion)
-    N, m = fd.opinion.shape
-    c_star = np.full((N, m), 0.0, dtype=np.float32)   # your custom ideal
-
-    env = FrankenmanderingEnv(
-        num_voters=fd.opinion.shape[0],
-        num_districts=K,
-        opinion_dim=fd.opinion.shape[1],
-        horizon=steps,
-        seed=0,
-        FrankenData=fd,
-        target_opinion=c_star,  # defaults to zeros of shape (N, m)
-    )
-
-    # static one-hot action from initial labels
-    labels = np.asarray(fd.dist_label, dtype=np.int32)
-    action = labels_to_action(labels, K)
-
-    obs, info = env.reset()
-
-    # ---- DEBUG PEEK: t=0 (before any update) ----
-    x_t = np.asarray(obs.opinion)
-    # Initial MAD distance to c* (per voter average) measured before applying any step
-    init_dist = float(np.mean(np.abs(np.squeeze(x_t) - np.squeeze(c_star))))
-    print(f"Initial Distance:t= 0 (pre-step)  sum|x|={init_dist:.3f}")
-
-    for t in range(steps):
-        obs, reward, terminated, truncated, info = env.step(action, drf_f4, Beta1, Beta2)
-
-        # ---- DEBUG PEEK: after this step ----
-        # choose any checkpoints you want; these hit early/mid/last
-        if t in (0, steps//2 - 1, steps - 1):
-            x_t = np.asarray(obs.opinion)
-            step_mean = float(np.mean(np.abs(np.squeeze(x_t) - np.squeeze(c_star))))
-            print(f"t={t+1:3d} (post-step) sum|x|={step_mean:.3f}")
-
-        if terminated or truncated:
-            break
-
-    x_final = np.asarray(obs.opinion)
-    # print(f"x_final mean: {x_final.mean()} ...")
-    # final distance to c*
-    final_dist = float(np.mean(np.abs(np.squeeze(x_final) - np.squeeze(c_star))))
-    print(f"Final distance:", final_dist)
-    print(f"Final distance = Step Mean 100:", final_dist == step_mean)
-    opinion_dist_change = final_dist - init_dist
-    print(f"opinion_dist_change = Final - Initial:", opinion_dist_change)
-
-    # Histogram of the averages across runs
-    return float(final_dist)
 
 def exp_slug(K,H,W,F,M_per_f,STEPS, drf_name="4", metric="mad"):
     return f"exp-K{K}_H{H}xW{W}_F{F}_M{M_per_f}_S{STEPS}_{drf_name}_{metric}"
@@ -209,7 +151,7 @@ def main():
     # one Zarr run per experiment (keeps previous runs intact)
     # (choose a root dir; or define ZARR_ROOT in utils and omit root_dir=)
     # 1) OPEN (or create) the single experiment store
-    EXPERIMENT = exp_slug(K,H,W,F,M_per_f,STEPS, drf_name="drf_f4", metric="mad")
+    EXPERIMENT = exp_slug(K,H,W,F,M_per_f,STEPS, drf_name="drf_f1", metric="mad")
     root_exp, EXP_PATH = zarr_open_experiment_store(
         root_dir="artifacts_zarr",
         experiment_slug=EXPERIMENT,
@@ -276,7 +218,7 @@ def main():
 
                 for t in range(STEPS):
                     # Change drf function here as per need
-                    obs, reward, terminated, truncated, info = env.step(action, drf_f4, Beta1, Beta2)
+                    obs, reward, terminated, truncated, info = env.step(action, drf_f1, Beta1, Beta2)
                     t_post = t + 1
                     if t_post in CHECK_T:
                         x_t = np.asarray(obs.opinion)
