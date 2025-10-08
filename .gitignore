@@ -1,0 +1,8 @@
+# --gitignore--
+
+#!/usr/bin/env python3
+# -*- coding: utf-8 -*-
+
+*.pyc
+__pycache__/
+artifacts_zarr/
