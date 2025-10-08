@@ -2,11 +2,18 @@ import numpy as np, pandas as pd, zarr
 from typing import Dict
 from gerry_environment import FrankenData, FrankenmanderingEnv  # your classes
 from opinion_distribution_utils import zarr_open_experiment_store  # for path helpers
-from opinion_distribution import drf_f4, drf_f1
+from opinion_distribution import labels_to_action,drf_f4, drf_f1
 
 # ---- CONFIG: point to the experiment + run you want to replay ----
-EXP_PATH = "artifacts_zarr/exp-K6_H8xW9_F30_M30_S100_drf_f4_mad.zarr"   # adjust if needed
-RUN_NAME = "run-20251008-045422-99883f15"                               # your uploaded run id
+# If DRF_f1 then use these paths
+EXP_PATH = r"F:\Carleton University\Prof Zinovi RA\Code\artifacts_zarr_drf_1\exp-K6_H8xW9_F30_M30_S100_drf_f1_mad.zarr"
+RUN_NAME = "run-20251008-093608-b03dc421"   # or "run-20251008-..." if you used time-based ids
+DRF_FN = drf_f1
+
+# If DRF_f4 then use these paths
+# EXP_PATH = r"F:\Carleton University\Prof Zinovi RA\Code\artifacts_zarr_drf_4\exp-K6_H8xW9_F30_M30_S100_drf_f4_mad.zarr"
+# RUN_NAME = "run-20251008-045422-99883f15"   # or "run-20251008-..." if you used time-based ids
+# DRF_FN = drf_f4
 
 Beta1 = 0.005   # change freely
 Beta2 = 0.01   # change freely
@@ -77,12 +84,15 @@ for f_key in sorted([k for k in g_run.keys() if k.startswith("f_")]):
             g_init = g_c["world_init"]
             fd0 = rebuild_fd_from_world_init(g_init)
             c_star = _np(g_init["c_star"][:]).astype(np.float32)   # (N,m)
+            labels0_np = np.asarray(fd0.dist_label, dtype=np.int64).ravel()
+            num_districts = int(labels0_np.max()) + 1
+            action = labels_to_action(labels0_np, num_districts)
 
             # env with fixed horizon=100, same DRF and betas you used originally
             # If your step signature requires DRF/Beta1/Beta2, set them here:
             env = FrankenmanderingEnv(
                 num_voters = fd0.opinion.shape[0],
-                num_districts = int(np.max(fd0.dist_label))+1,
+                num_districts = num_districts,
                 opinion_dim = fd0.opinion.shape[1],
                 horizon = 100,
                 seed = 0,
@@ -108,11 +118,8 @@ for f_key in sorted([k for k in g_run.keys() if k.startswith("f_")]):
             # Here we just keep current labels (one-hot) to drive opinion dynamics via reps augmentation.
             for t in range(1, 101):
                 labels = fd.dist_label
-                A = np.zeros((labels.shape[0], int(np.max(labels))+1), dtype=np.float32)
-                A[np.arange(labels.shape[0]), labels] = 1.0
-
                 # Supply DRF and Betas you used in original run (f1/f4, Beta1, Beta2); example:
-                fd, reward, terminated, truncated, info = env.step(A, DRF="drf_f4", Beta1=Beta1, Beta2=Beta2)
+                fd, reward, terminated, truncated, info = env.step(action, DRF=DRF_FN, Beta1=Beta1, Beta2=Beta2)
 
                 mt = mean_abs_stats(fd.opinion, c_star)
                 rows.append({
@@ -128,5 +135,8 @@ for f_key in sorted([k for k in g_run.keys() if k.startswith("f_")]):
 
 # save CSV
 df = pd.DataFrame(rows).sort_values(["f_id","m_id","c_idx","step"]).reset_index(drop=True)
-df.to_csv(f"{RUN_NAME}_perstep_metrics.csv", index=False)
+# If using drf_f1 then use this path
+df.to_csv(f"F:/Carleton University/Prof Zinovi RA/Code/artifacts_zarr_drf_1/exp-K6_H8xW9_F30_M30_S100_drf_f1_mad.zarr/runs/run-20251008-093608-b03dc421/csv_and_histogram/{RUN_NAME}_perstep_metrics.csv", index=False)
+# If using drf_f4 then use this path
+# df.to_csv(f"F:/Carleton University/Prof Zinovi RA/Code/artifacts_zarr_drf_4/exp-K6_H8xW9_F30_M30_S100_drf_f4_mad.zarr/runs/run-20251008-045422-99883f15/csv_and_histogram/{RUN_NAME}_perstep_metrics.csv", index=False)
 print(df.shape)  # expect (272700, 7)
