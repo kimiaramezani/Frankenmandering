@@ -1,0 +1,132 @@
+import numpy as np, pandas as pd, zarr
+from typing import Dict
+from gerry_environment import FrankenData, FrankenmanderingEnv  # your classes
+from opinion_distribution_utils import zarr_open_experiment_store  # for path helpers
+from opinion_distribution import drf_f4, drf_f1
+
+# ---- CONFIG: point to the experiment + run you want to replay ----
+EXP_PATH = "artifacts_zarr/exp-K6_H8xW9_F30_M30_S100_drf_f4_mad.zarr"   # adjust if needed
+RUN_NAME = "run-20251008-045422-99883f15"                               # your uploaded run id
+
+Beta1 = 0.005   # change freely
+Beta2 = 0.01   # change freely
+
+# ---- helpers ----
+def _np(a): 
+    return np.asarray(a)
+
+def rebuild_fd_from_world_init(g_init) -> FrankenData:
+    opinion0   = _np(g_init["opinion0"][:]).astype(np.float32)        # (N,m)
+    labels0    = _np(g_init["labels0"][:]).astype(np.int64)           # (N,)
+    geo_edge   = _np(g_init["geo_edge"][:]).astype(np.int64)          # (2,E_geo)
+    social_edge= _np(g_init["social_edge"][:]).astype(np.int64)       # (2,E_soc)
+    pos_xy     = _np(g_init["pos_xy"][:]).astype(np.float32)          # (N,2)
+
+    # optional attrs (may or may not exist)
+    geo_edge_attr    = g_init.get("geo_edge_attr")
+    social_edge_attr = g_init.get("social_edge_attr")
+    if geo_edge_attr is not None:    geo_edge_attr    = _np(geo_edge_attr[:]).astype(np.float32)
+    if social_edge_attr is not None: social_edge_attr = _np(social_edge_attr[:]).astype(np.float32)
+    else:                            social_edge_attr = np.ones(social_edge.shape[1], dtype=np.float32)
+
+    orig_edge_num = social_edge.shape[1]
+
+    # Build FrankenData (matches your __init__ signature)
+    fd0 = FrankenData(
+        social_edge       = social_edge,
+        geographical_edge = geo_edge,
+        orig_edge_num     = orig_edge_num,
+        opinion           = opinion0,
+        pos               = pos_xy,
+        reps              = None,
+        dist_label        = labels0,
+        edge_attr         = social_edge_attr,
+        geo_edge_attr     = (geo_edge_attr if geo_edge_attr is not None else np.ones((geo_edge.shape[1],1), np.float32)),
+    )
+    return fd0
+
+def mean_abs_stats(opinion: np.ndarray, c_star: np.ndarray) -> Dict[str, float]:
+    # opinion, c_star both (N,m); distances in same units you’re using now
+    d = np.abs(opinion - c_star)
+    # if m>1 this is elementwise abs — which matches your “MAD to c*” definition in the run;
+    # if you instead want L2-to-c* then replace with: d = np.linalg.norm(opinion - c_star, axis=1, keepdims=True)
+    # and drop keepdims below.
+    d = d.reshape(d.shape[0], -1).mean(axis=1, keepdims=True)  # average over m dims → per-node scalar
+    return {
+        "mad": float(d.mean()),
+        "sd":  float(d.std(ddof=0)),
+        "mean_opinion": float(opinion.reshape(opinion.shape[0], -1).mean())
+    }
+
+# ---- open run ----
+root = zarr.open_group(EXP_PATH, mode="r")
+g_run = root["runs"][RUN_NAME]
+
+# try to read c* list for labeling
+c_star_list = list(map(float, root.attrs.get("c_star_list", [])))
+
+rows = []
+for f_key in sorted([k for k in g_run.keys() if k.startswith("f_")]):
+    g_f = g_run[f_key]
+    for m_key in sorted([k for k in g_f.keys() if k.startswith("m_")]):
+        g_m = g_f[m_key]
+
+        # Each (f,m) has 3 c_* groups (c_000, c_001, c_002). We will rebuild from world_init of each c.
+        for c_key in sorted([k for k in g_m.keys() if k.startswith("c_")]):
+            g_c = g_m[c_key]
+            g_init = g_c["world_init"]
+            fd0 = rebuild_fd_from_world_init(g_init)
+            c_star = _np(g_init["c_star"][:]).astype(np.float32)   # (N,m)
+
+            # env with fixed horizon=100, same DRF and betas you used originally
+            # If your step signature requires DRF/Beta1/Beta2, set them here:
+            env = FrankenmanderingEnv(
+                num_voters = fd0.opinion.shape[0],
+                num_districts = int(np.max(fd0.dist_label))+1,
+                opinion_dim = fd0.opinion.shape[1],
+                horizon = 100,
+                seed = 0,
+                FrankenData = fd0,
+                target_opinion = c_star
+            )
+            fd, _ = env.reset()
+
+            # t=0 metrics (from world_init)
+            m0 = mean_abs_stats(fd.opinion, c_star)
+            rows.append({
+                "run": RUN_NAME,
+                "f_id": int(f_key.split("_")[1]),
+                "m_id": int(m_key.split("_")[1]),
+                "c_idx": int(c_key.split("_")[1]),
+                "step": 0,
+                "mean_opinion": m0["mean_opinion"],
+                "mad": m0["mad"],
+                "sd": m0["sd"]
+            })
+
+            # do 100 steps; use a no-op “keep labels” policy or your preferred policy
+            # Here we just keep current labels (one-hot) to drive opinion dynamics via reps augmentation.
+            for t in range(1, 101):
+                labels = fd.dist_label
+                A = np.zeros((labels.shape[0], int(np.max(labels))+1), dtype=np.float32)
+                A[np.arange(labels.shape[0]), labels] = 1.0
+
+                # Supply DRF and Betas you used in original run (f1/f4, Beta1, Beta2); example:
+                fd, reward, terminated, truncated, info = env.step(A, DRF="drf_f4", Beta1=Beta1, Beta2=Beta2)
+
+                mt = mean_abs_stats(fd.opinion, c_star)
+                rows.append({
+                    "run": RUN_NAME,
+                    "f_id": int(f_key.split("_")[1]),
+                    "m_id": int(m_key.split("_")[1]),
+                    "c_idx": int(c_key.split("_")[1]),
+                    "step": t,
+                    "mean_opinion": mt["mean_opinion"],
+                    "mad": mt["mad"],
+                    "sd": mt["sd"]
+                })
+
+# save CSV
+df = pd.DataFrame(rows).sort_values(["f_id","m_id","c_idx","step"]).reset_index(drop=True)
+df.to_csv(f"{RUN_NAME}_perstep_metrics.csv", index=False)
+print(df.shape)  # expect (272700, 7)
