@@ -4,7 +4,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import zarr
 
-EXP_PATH = r"artifacts_zarr\exp-K6_H8xW9_F30_M30_S100_drf_f4_mad.zarr"
+EXP_PATH = r"F:\Carleton University\Prof Zinovi RA\Code\artifacts_zarr_drf_4\exp-K6_H8xW9_F30_M30_S100_drf_f4_mad.zarr"
 RUN_NAME = "run-20251008-045422-99883f15"   # or "run-20251008-..." if you used time-based ids
 
 root = zarr.open_group(EXP_PATH, mode="r")
@@ -27,7 +27,7 @@ df = pd.DataFrame(rows).sort_values(["f","m","c"])
 print(df.shape)    # expect (F*M_per_f*len(c_star_list), 7) e.g., (2700, 7)
 
 # you can save to CSV if you want
-df.to_csv(f"F:/Carleton University/Prof Zinovi RA/Code/Frankenmandering/combined/opinion_distribution_results/{RUN_NAME}.csv", index=False)
+df.to_csv(f"F:/Carleton University/Prof Zinovi RA/Code/artifacts_zarr_drf_4/{RUN_NAME}/{RUN_NAME}.csv", index=False)
 
 # 1) add a numeric c index and (optionally) the actual c* value
 df = df.copy()
@@ -75,6 +75,6 @@ def plot_metric_by_c(df, metric, outdir=".", bins=30):
     print(f"saved {fname}")
 
 # 3) make the three figures
-plot_metric_by_c(df, "init_mad",  outdir="histograms")
-plot_metric_by_c(df, "final_mad", outdir="histograms")
-plot_metric_by_c(df, "delta_mad", outdir="histograms")
+plot_metric_by_c(df, "init_mad",  outdir=f"F:/Carleton University/Prof Zinovi RA/Code/artifacts_zarr_drf_4/{RUN_NAME}/")
+plot_metric_by_c(df, "final_mad", outdir=f"F:/Carleton University/Prof Zinovi RA/Code/artifacts_zarr_drf_4/{RUN_NAME}/")
+plot_metric_by_c(df, "delta_mad", outdir=f"F:/Carleton University/Prof Zinovi RA/Code/artifacts_zarr_drf_4/{RUN_NAME}/")
