@@ -10,6 +10,21 @@ RUN_NAME = "run-20251008-045422-99883f15"   # or "run-20251008-..." if you used 
 root = zarr.open_group(EXP_PATH, mode="r")
 g_run = root["runs"][RUN_NAME]
 
+def infer_drf_name(root, exp_path: str) -> str:
+    # 1) Try Zarr attrs (best)
+    drf = root.attrs.get("drf_name")
+    if isinstance(drf, (str, bytes)) and len(str(drf).strip()) > 0:
+        return str(drf)
+
+    # 2) Fallback: parse from EXP_PATH (e.g., "..._drf_f4_mad.zarr")
+    m = re.search(r"drf_([^/\\]+)", exp_path)
+    if m:
+        return m.group(1)
+
+    return "unknown_drf"
+
+DRF_NAME = infer_drf_name(root, EXP_PATH)
+
 rows = []
 for f_key in sorted([k for k in g_run.keys() if k.startswith("f_")]):
     g_f = g_run[f_key]
@@ -27,7 +42,7 @@ df = pd.DataFrame(rows).sort_values(["f","m","c"])
 print(df.shape)    # expect (F*M_per_f*len(c_star_list), 7) e.g., (2700, 7)
 
 # you can save to CSV if you want
-df.to_csv(f"F:/Carleton University/Prof Zinovi RA/Code/artifacts_zarr_drf_4/{RUN_NAME}/{RUN_NAME}.csv", index=False)
+df.to_csv(f"F:/Carleton University/Prof Zinovi RA/Code/artifacts_zarr_drf_4/exp-K6_H8xW9_F30_M30_S100_drf_f4_mad.zarr/runs/run-20251008-045422-99883f15/csv_and_histogram/{RUN_NAME}.csv", index=False)
 
 # 1) add a numeric c index and (optionally) the actual c* value
 df = df.copy()
@@ -42,7 +57,7 @@ except Exception:
     c_label_fmt = lambda r: f"c_idx={r['c_idx']}"
 
 # 2) plotting helper
-def plot_metric_by_c(df, metric, outdir=".", bins=30):
+def plot_metric_by_c(df, metric, outdir=".", bins=30, drf=DRF_NAME):
     cs = sorted(df["c_idx"].unique())
     # common range across c for fair comparison
     vmin = df[metric].min()
@@ -67,7 +82,7 @@ def plot_metric_by_c(df, metric, outdir=".", bins=30):
         ax.set_ylabel("count")
         ax.grid(True, alpha=0.3)
 
-    fig.suptitle(f"Histogram of {metric} by c")
+    fig.suptitle(f"Histogram of {metric} by c for DRF: {drf}")
     fig.tight_layout(rect=[0, 0.03, 1, 0.95])
     os.makedirs(outdir, exist_ok=True)
     fname = os.path.join(outdir, f"hist_{metric}_by_c.png")
@@ -75,6 +90,6 @@ def plot_metric_by_c(df, metric, outdir=".", bins=30):
     print(f"saved {fname}")
 
 # 3) make the three figures
-plot_metric_by_c(df, "init_mad",  outdir=f"F:/Carleton University/Prof Zinovi RA/Code/artifacts_zarr_drf_4/{RUN_NAME}/")
-plot_metric_by_c(df, "final_mad", outdir=f"F:/Carleton University/Prof Zinovi RA/Code/artifacts_zarr_drf_4/{RUN_NAME}/")
-plot_metric_by_c(df, "delta_mad", outdir=f"F:/Carleton University/Prof Zinovi RA/Code/artifacts_zarr_drf_4/{RUN_NAME}/")
+plot_metric_by_c(df, "init_mad",  outdir=f"F:/Carleton University/Prof Zinovi RA/Code/artifacts_zarr_drf_4/exp-K6_H8xW9_F30_M30_S100_drf_f4_mad.zarr/runs/run-20251008-045422-99883f15/csv_and_histogram")
+plot_metric_by_c(df, "final_mad", outdir=f"F:/Carleton University/Prof Zinovi RA/Code/artifacts_zarr_drf_4/exp-K6_H8xW9_F30_M30_S100_drf_f4_mad.zarr/runs/run-20251008-045422-99883f15/csv_and_histogram")
+plot_metric_by_c(df, "delta_mad", outdir=f"F:/Carleton University/Prof Zinovi RA/Code/artifacts_zarr_drf_4/exp-K6_H8xW9_F30_M30_S100_drf_f4_mad.zarr/runs/run-20251008-045422-99883f15/csv_and_histogram")
