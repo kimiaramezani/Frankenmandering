@@ -12,6 +12,8 @@ from typing import Dict
 from gerry_environment import FrankenData, FrankenmanderingEnv  # your classes
 from opinion_distribution_utils import zarr_open_experiment_store  # for path helpers
 from opinion_distribution import labels_to_action,drf_f4, drf_f1
+import pyarrow.parquet as pq
+import fastparquet
 
 # ---- CONFIG: point to the experiment + run you want to replay ----
 # If DRF_f1 then use these paths
