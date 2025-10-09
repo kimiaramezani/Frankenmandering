@@ -19,3 +19,4 @@ torch-geometric>=2.6.1
 gymnasium==1.2.0
 import-ipynb==0.4.6
 pyarrow==21.0.0
+fastparquet==2024.11.0
