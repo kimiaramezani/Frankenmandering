@@ -19,8 +19,8 @@ This metric quantifies how opinions evolve over time within a graph.
 5. Normalize by the number of nodes  
 6. Normalize by the total number of steps  
 
-**Formula**
-distance = Σ (new_opinion − old_opinion) / number_of_nodes
+**Formula**  
+distance = Σ (new_opinion − old_opinion) / number_of_nodes  
 metric_1 = distance / total_steps
 
 # “global_dist” Function:
@@ -35,8 +35,8 @@ This metric captures how much opinions change from the beginning to the end of t
 4. Sum the differences across all opinions  
 5. Normalize by the total number of steps  
 
-**Formula**
-distance = Σ (initial_opinion − last_opinion)
+**Formula**  
+distance = Σ (initial_opinion − last_opinion)  
 metric_2 = distance / total_steps
 
 
