@@ -10,8 +10,11 @@ We implement the ideas of the uploaded papers in the [Reference Papers](https://
 
 | Main Folder | Sub Folder| File| Description |
 |----------|----------|----------|----------|
-| [Natural Opinion dynamic](https://github.com/kimiaramezani/Frankenmandering/tree/main/Natural%20Opinion%20dynamic) | [results](https://github.com/kimiaramezani/Frankenmandering/tree/main/Natural%20Opinion%20dynamic/Results)  | [Natural_OD_stat.ipynb ](https://github.com/kimiaramezani/Frankenmandering/blob/main/Natural%20Opinion%20dynamic/Results/Natural_OD_stat.ipynb) |
-| |  | [analysis.md](https://github.com/kimiaramezani/Frankenmandering/blob/main/Natural%20Opinion%20dynamic/Results/analysis.md)  | Row 2 C  |
+| [Natural Opinion dynamic](https://github.com/kimiaramezani/Frankenmandering/tree/main/Natural%20Opinion%20dynamic) | [results](https://github.com/kimiaramezani/Frankenmandering/tree/main/Natural%20Opinion%20dynamic/Results)  | [Natural_OD_stat.ipynb ](https://github.com/kimiaramezani/Frankenmandering/blob/main/Natural%20Opinion%20dynamic/Results/Natural_OD_stat.ipynb) | This code generates statistical graphs to visualize the results of natural behaviour 
+| |  | [70_graphs_summary.md](https://github.com/kimiaramezani/Frankenmandering/blob/main/Natural%20Opinion%20dynamic/Results/70_graphs_summary.md)  | This file is a summary of the results of testing natural dynamic behaviour for 70 graphs|
+| |  | [DRFs_summary.md](https://github.com/kimiaramezani/Frankenmandering/blob/main/Natural%20Opinion%20dynamic/Results/DRFs_summary.md)  | This file is a summary of the results of testing natural dynamic behaviour with different DRF functions|
+| | [Test](https://github.com/kimiaramezani/Frankenmandering/tree/main/Natural%20Opinion%20dynamic/Test) | [NOD_Description.md](https://github.com/kimiaramezani/Frankenmandering/blob/main/Natural%20Opinion%20dynamic/Test/NOD_Description.md)  | This file explains how Natural opinion dynamic works|
+| |  | [Natural_OD_travel.ipynb](https://github.com/kimiaramezani/Frankenmandering/blob/main/Natural%20Opinion%20dynamic/Test/Natural_OD_travel.ipynb)  | This file provides code for testing Natural opinion dynamic behaviour|
 
 
 
