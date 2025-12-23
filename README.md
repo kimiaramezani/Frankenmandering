@@ -20,7 +20,7 @@ We implement the ideas of the uploaded papers in the [Reference Papers](https://
 ### 📂 Test
 | File | Description |
 |------|------------|
-| [`NOD_Description.md`](https://github.com/kimiaramezani/Frankenmandering/blob/main/Natural%20Opinion%20dynamic/Test/NOD_Description.md) | Explains how Natural Opinion Dynamic works |
+| [`NOD_Description.md`](https://github.com/kimiaramezani/Frankenmandering/blob/main/Natural%20Opinion%20dynamic/Test/NOD_Description.md) | Explains how Natural Opinion Dynamic works, metrics and formulations |
 | [`Natural_OD_travel.ipynb`](https://github.com/kimiaramezani/Frankenmandering/blob/main/Natural%20Opinion%20dynamic/Test/Natural_OD_travel.ipynb) | Code for testing Natural Opinion Dynamic behavior |
 
 
