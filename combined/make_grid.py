@@ -172,7 +172,7 @@ class Graph:
     
     def build_edges_grid(self, H: int | None = None, W: int | None = None, *,
         neighborhood: str = "rook",   # "rook" (4-neigh) or "queen" (8-neigh)
-        weight_grid: float = 1.0, barrier_flag: int = 1, use_barrier: int = 1):
+        weight_grid: float = 1.0, barrier_flag: int = 0):
         """
         This edge builder can handle both full grids and masked lattices. But it is only for 
         grids/lattices where nodes have integer (x,y) coordinates. When the graph is not a grid
@@ -250,7 +250,6 @@ class Graph:
         # annotate and update the NX graph
         edges["weight_grid"]  = weight_grid
         edges["barrier_flag"] = barrier_flag
-        edges["use_barrier"]  = use_barrier
         edges["edge_type_geo"] = 1
         # --- NX graph update
         # Undirected nx.Graph only needs one direction; adding the canonical (u < v) set is enough.
@@ -565,12 +564,7 @@ class Graph:
             data['node','geo','node'].edge_index = ei_geo
             if 'weight_grid' in self.df_edges_geo.columns:
                 w_geo = torch.tensor(self.df_edges_geo['weight_grid'].to_numpy(), dtype=torch.float)
-                bf = torch.tensor(self.df_edges_geo.get('barrier_flag', 1).to_numpy(), dtype=torch.float32)
-                ub = torch.tensor(self.df_edges_geo.get('use_barrier', 1).to_numpy(), dtype=torch.float32)
-                data['node','geo','node'].edge_attr   = torch.stack([w_geo, bf, ub], dim=1)  # [E,3]
                 data['node','geo','node'].edge_weight = w_geo
-                data['node','geo','node'].barrier_flag = bf
-                data['node','geo','node'].use_barrier = ub
 
         # SOCIAL
         if self.df_edges_social is not None and not self.df_edges_social.empty:

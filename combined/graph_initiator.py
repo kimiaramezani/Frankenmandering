@@ -52,7 +52,7 @@ def build_init_data(
     G.generate_positions(mode="grid", H=H, W=W)
 
     # 2) GEO edges
-    G.build_edges_grid(H=H, W=W, neighborhood=neighborhood, weight_grid=1.0, barrier_flag=1, use_barrier=1)
+    G.build_edges_grid(H=H, W=W, neighborhood=neighborhood)
 
     # 3) SOCIAL edges
     G.build_edges_social_ba(m=ba_m, rng_seed=rng_seed)

@@ -48,11 +48,8 @@ def graph_to_frankendata(G,
     # --- geo edges: edge_index (2,E) + edge_attr (E,) (One per pair, not directed)
     if not G.df_edges_geo.empty:
         geo_edge = torch.tensor(G.df_edges_geo[['u','v']].to_numpy().T, dtype=torch.long)
-        w_geo = torch.tensor(G.df_edges_geo.get('weight_grid', 1.0).to_numpy(),  dtype=torch.float32)
-        bf = torch.tensor(G.df_edges_geo.get('barrier_flag', 0).to_numpy(),   dtype=torch.float32)
-        ub = torch.tensor(G.df_edges_geo.get('use_barrier', 1).to_numpy(),    dtype=torch.float32)
-
-        geo_attr = torch.stack([w_geo, bf, ub], dim=1)  # [E,3]
+        geo_attr = torch.tensor(G.df_edges_geo['weight_grid'].to_numpy(), dtype=torch.float) \
+                if 'weight_grid' in G.df_edges_geo.columns else None
     else:
         geo_edge, geo_attr = None, None
     
@@ -144,12 +141,10 @@ def inchworm_to_frankendata(G_nx):
     if pairs:
         geographical_edge = np.asarray(pairs, dtype=np.int64).T
         geo_w = [float(G_nx[nodes[a]][nodes[b]].get("weight_grid", 1.0)) for a, b in pairs]
-        geo_bf = [float(G_nx[nodes[a]][nodes[b]].get("barrier_flag", 0.0)) for a, b in pairs]
-        geo_ub = [float(G_nx[nodes[a]][nodes[b]].get("use_barrier", 1.0))  for a, b in pairs]
         geo_edge_attr = np.asarray(geo_w, dtype=np.float32)
     else:
         geographical_edge = np.empty((2, 0), dtype=np.int64)
-        geo_edge_attr = np.empty((0, 3), dtype=np.float32)
+        geo_edge_attr = np.empty((0,), dtype=np.float32)
 
    # Social edges/weights: pass-through exactly as stored on the graph (can be empty or None)
     social_edge = G_nx.graph.get("social_edge", None)
