@@ -1,0 +1,10 @@
+F:\Carleton University\Prof Zinovi RA\Code\Frankenmandering\revrecom_py\target\release\deps\structopt_derive-5301798f68a88a58.d: C:\Users\chint\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\structopt-derive-0.4.18\src\lib.rs C:\Users\chint\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\structopt-derive-0.4.18\src\attrs.rs C:\Users\chint\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\structopt-derive-0.4.18\src\doc_comments.rs C:\Users\chint\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\structopt-derive-0.4.18\src\parse.rs C:\Users\chint\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\structopt-derive-0.4.18\src\spanned.rs C:\Users\chint\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\structopt-derive-0.4.18\src\ty.rs
+
+F:\Carleton University\Prof Zinovi RA\Code\Frankenmandering\revrecom_py\target\release\deps\structopt_derive-5301798f68a88a58.dll: C:\Users\chint\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\structopt-derive-0.4.18\src\lib.rs C:\Users\chint\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\structopt-derive-0.4.18\src\attrs.rs C:\Users\chint\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\structopt-derive-0.4.18\src\doc_comments.rs C:\Users\chint\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\structopt-derive-0.4.18\src\parse.rs C:\Users\chint\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\structopt-derive-0.4.18\src\spanned.rs C:\Users\chint\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\structopt-derive-0.4.18\src\ty.rs
+
+C:\Users\chint\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\structopt-derive-0.4.18\src\lib.rs:
+C:\Users\chint\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\structopt-derive-0.4.18\src\attrs.rs:
+C:\Users\chint\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\structopt-derive-0.4.18\src\doc_comments.rs:
+C:\Users\chint\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\structopt-derive-0.4.18\src\parse.rs:
+C:\Users\chint\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\structopt-derive-0.4.18\src\spanned.rs:
+C:\Users\chint\.cargo\registry\src\index.crates.io-1949cf8c6b5b557f\structopt-derive-0.4.18\src\ty.rs:

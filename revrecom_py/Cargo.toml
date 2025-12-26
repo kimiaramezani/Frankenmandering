@@ -1,0 +1,13 @@
+[package]
+name = "revrecom_py"
+version = "0.1.0"
+edition = "2021"        # <- keep 2021 (stable)
+
+[lib]
+name = "revrecom_py"
+crate-type = ["cdylib"]
+
+[dependencies]
+pyo3 = { version = "0.21", features = ["extension-module"] }
+# point to your vendored crate; disable optional features to avoid BLAS/LAPACK issues
+frcw = { path = "../frcw.rs-main", default-features = false }
