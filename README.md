@@ -17,7 +17,7 @@ We implement the ideas of the uploaded papers in the [Reference Papers](https://
 | [`70_graphs_summary.md`](https://github.com/kimiaramezani/Frankenmandering/blob/main/Natural%20Opinion%20dynamic/Results/70_graphs_summary.md) | Summary of natural dynamic behavior across 70 graphs |
 | [`DRFs_summary.md`](https://github.com/kimiaramezani/Frankenmandering/blob/main/Natural%20Opinion%20dynamic/Results/DRFs_summary.md) | Summary of experiments with different DRF functions |
 
-### 📂 Test
+### 📂 Experiments
 | File | Description |
 |------|------------|
 | [`NOD_Description.md`](https://github.com/kimiaramezani/Frankenmandering/blob/main/Natural%20Opinion%20dynamic/Test/NOD_Description.md) | Explains how Natural Opinion Dynamic works, metrics and formulations |
