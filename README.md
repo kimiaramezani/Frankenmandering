@@ -16,11 +16,13 @@ We implement the ideas of the uploaded papers in the [Reference Papers](https://
 | [`Natural_OD_stat.ipynb`](https://github.com/kimiaramezani/Frankenmandering/blob/main/Natural%20Opinion%20dynamic/Results/Natural_OD_stat.ipynb) | Generates statistical graphs to visualize natural behavior |
 | [`70_graphs_summary.md`](https://github.com/kimiaramezani/Frankenmandering/blob/main/Natural%20Opinion%20dynamic/Results/70_graphs_summary.md) | Summary of natural dynamic behavior across 70 graphs |
 | [`DRFs_summary.md`](https://github.com/kimiaramezani/Frankenmandering/blob/main/Natural%20Opinion%20dynamic/Results/DRFs_summary.md) | Summary of experiments with different DRF functions |
+| [`Inchworm.md`](https://github.com/kimiaramezani/Frankenmandering/blob/main/Natural%20Opinion%20dynamic/Results/Inchworm.md) | Summary of two inchworm's experiments |
 
 ### 📂 Experiments
 | File | Description |
 |------|------------|
 | [`NOD_Description.md`](https://github.com/kimiaramezani/Frankenmandering/blob/main/Natural%20Opinion%20dynamic/Test/NOD_Description.md) | Explains how Natural Opinion Dynamic works, metrics and formulations |
 | [`Natural_OD_travel.ipynb`](https://github.com/kimiaramezani/Frankenmandering/blob/main/Natural%20Opinion%20dynamic/Test/Natural_OD_travel.ipynb) | Code for testing Natural Opinion Dynamic behavior |
+
 
 
