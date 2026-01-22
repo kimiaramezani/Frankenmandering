@@ -4,7 +4,7 @@
 # python==3.12
 pandas>=2.2
 numpy>=1.26
-matplotlib=3.10
+matplotlib>=3.10
 pyyaml>=6.0
 
 #Plotting (extra)
@@ -17,4 +17,28 @@ torch>=2.8.0
 # pip install pyg-lib torch-scatter torch-sparse torch-cluster torch-spline-conv -f https://data.pyg.org/whl/torch-2.8.0+cpu.html
 torch-geometric>=2.6.1
 gymnasium==1.2.0
-import-ipynb==0.4.6
+import-ipynb==0.2
+
+# Once the above libraries are installed, run the following command to install additional dependencies:
+# Install Rust toolchain (Windows)
+# winget install Rustlang.Rustup
+
+# restart terminal, then verify
+# rustc --version
+# cargo --version
+
+# Python build tooling
+# conda activate gerrymender
+# python -m pip install maturin
+
+# Installing the MSVC linker through Visual Studio Build Tools (Windows)
+# winget install Microsoft.VisualStudio.2022.BuildTools --override "--add Microsoft.VisualStudio.Component.VC.Llvm.ClangToolset --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK.19041"
+# or
+# winget install Microsoft.VisualStudio.2022.BuildTools
+# or Download visual studio build tools installer from https://visualstudio.microsoft.com/downloads/ (select "Build Tools for Visual Studio 2022")
+# and select "Desktop development with C++" workload, then install
+
+
+# Build and install the extension into your env
+# cd revrecom_py (Go to the revrecom_py folder)
+# maturin develop --release

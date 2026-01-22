@@ -64,7 +64,7 @@ def main():
     G = Graph(*Graph.make_node_ids(H * W))                           # :contentReference[oaicite:6]{index=6}
     G.generate_positions(mode="grid", H=H, W=W, seed=rng_seed)       # :contentReference[oaicite:7]{index=7}
     G.build_edges_grid(H=H, W=W, neighborhood="rook", weight_grid=1.0,
-                       barrier_flag=0, use_barrier=1)                 # :contentReference[oaicite:8]{index=8}
+                       barrier_flag=0)                               # :contentReference[oaicite:8]{index=8}
     # SOCIAL is required by graph_to_frankendata
     G.build_edges_social_ba(m=2, rng_seed=rng_seed, weight_social=1.0)  # :contentReference[oaicite:9]{index=9}
 
