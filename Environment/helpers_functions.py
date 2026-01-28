@@ -112,16 +112,13 @@ Augment the social graph with representative edges (district graphs).
 def augment_with_reps(edge_index, edge_attr, reps, dist_label, rep_edge_weight: float = 1.0):
     add_src, add_dst, add_w = [], [], []
     existing = set(map(tuple, edge_index.T.tolist()))
-    # print('existing=',existing)
     for d, r in enumerate(reps):
         if r is None:
             continue  # empty district
         members = torch.where(dist_label == d)[0]
-        # print('members=',members)
 
         for v in members:
           
-            # print(f'first r={r} and first v = {v}')
             r_i = int(r) if not torch.is_tensor(r) else int(r.item())
             v_i = int(v.item())
 
@@ -129,23 +126,8 @@ def augment_with_reps(edge_index, edge_attr, reps, dist_label, rep_edge_weight: 
                 continue  # skip self-loop
             
             
-            # if (v_i, r_i) in existing:
-            #     # print('removing inverse edge:', (v_i, r_i))
-
-            #     src = edge_index[0]
-            #     dst = edge_index[1]
-
-            #     mask_inv = ~((src == v_i) & (dst == r_i))
-
-            #     edge_index = edge_index[:, mask_inv]
-            #     edge_attr  = edge_attr[mask_inv]
-
-            #     # Update existing set since graph changed
-            #     existing.remove((v_i, r_i))
-            
             if (r_i, v_i) in existing:
-              # print('r=',r)
-              # print('v=',v)
+             
               continue  # skip duplicate
 
             add_src.append(torch.tensor(r, dtype=edge_index.dtype))            
@@ -165,7 +147,6 @@ def augment_with_reps(edge_index, edge_attr, reps, dist_label, rep_edge_weight: 
 
     new_edge_index = torch.cat([edge_index, rep_edges], dim=1)
     new_edge_attr = torch.cat([edge_attr, rep_weights], dim=0)
-    # print('new_edge_index=',new_edge_index)
     return new_edge_index, new_edge_attr
 
 """### **Opinion Update Function**
@@ -194,15 +175,16 @@ Because normalization is used, v doesn’t "overreact" to having many neighbours
 """
 
 def opinion_update(edge_index_aug, edge_attr, opinion,drf):
+
     N, m = opinion.shape   # N voters, m-dimensional opinions
     newX = torch.zeros_like(opinion)
 
     updates = torch.zeros_like(opinion)
-    norm_factors = torch.zeros((N, 1)) #Z
+    norm_factors = torch.zeros((N, 1), device=opinion.device, dtype=opinion.dtype)
 
     for e in range(edge_index_aug.shape[1]):
         u, v = edge_index_aug[:, e]
-        # print(f'u={u}  v={v}')
+        # print('u, v=',u, v)
         w = edge_attr[e]
 
         diff = opinion[u] - opinion[v]               # vector difference in opinion space
@@ -210,24 +192,23 @@ def opinion_update(edge_index_aug, edge_attr, opinion,drf):
        # Euclidean distance
        # if diff is a 1-D array [x, y, z], then np.linalg.norm(diff, 2) calculates sqrt(x^2 + y^2 + z^2)
         dist = torch.linalg.norm(diff, 2)
+        # norm_factors[v] += abs(w)
+        
 
         if dist > 1e-8:
             mu = drf(dist)
-
             direction = diff / dist    # unit vector (direction only)
-            # print(f'mu={mu}  direction={direction}')
-            # influence: u influences v
-            # print('influence=', mu * w * direction.item())
+            # print(f' mu = {mu} direction = {direction.item()}')
             updates[v] += mu * w * direction.item()
-            # norm_factors[v] += abs(w)
             norm_factors[v] = 1
 
     # apply updates with normalization
-    # print('updates=',updates)
-    for v in range(N):
-        if norm_factors[v] > 0:
-            newX[v] = opinion[v] + updates[v] / norm_factors[v]
 
+    for i in range(N):
+      newX[i] = opinion[i] + updates[i]
+        # if norm_factors[i] > 0:
+            # newX[i] = opinion[i] + updates[i] / norm_factors[i]
+            # print('newX[i] , opinion[i] , updates[i]',newX[i] , opinion[i] , updates[i])
     return newX
 
 """**Discrepancy Response Function**
@@ -312,9 +293,8 @@ def compactness_score(geo_edge, dist_label) -> float:
     score = num_cut_edges/ total_edges
     return score
 
-def drf_f1(discrepancy):
-    delta = abs(discrepancy)
-
+def drf_f1(delta):
+    
     if 0 <= delta <=1 :
         return 0  # indifference
 
@@ -339,8 +319,7 @@ def drf_f1(discrepancy):
     elif 6 <= delta  :
         return 0  # irrelevance (ignored)
 
-def drf_inchworm_withso(discrepancy):
-    delta = abs(discrepancy)
+def drf_inchworm_withso(delta):
 
     if 0 <= delta < 2:
         return 0  # indifference
@@ -354,23 +333,30 @@ def drf_inchworm_withso(discrepancy):
     elif 6 <= delta  :
         return 0  # irrelevance (ignored)
 
-    elif delta <= 2:
-        return 0  # ambivalence
+# def drf_inc_noso(delta):
+#     # delta = abs(discrepancy)
 
-def drf_inc_noso(discrepancy):
-    delta = abs(discrepancy)
+#     if 0 == delta:
+#         return 0  # indifference
 
+#     elif 0 < delta < 3:
+#         return 1  # assimilation (pull closer)
+
+#     elif 3 <= delta < 10:
+#         return -1  # backfire (push away)
+
+#     elif 10 <= delta  :
+        # return 0  # irrelevance (ignored)
+
+def drf_inc_noso(delta):
+    
     if 0 == delta:
         return 0  # indifference
 
     elif 0 < delta < 3:
         return 1  # assimilation (pull closer)
 
-    elif 3 <= delta < 10:
+    elif 3 <= delta:
         return -1  # backfire (push away)
 
-    elif 10 <= delta  :
-        return 0  # irrelevance (ignored)
-
-    elif delta == 0:
-        return 0  # ambivalence
+   
