@@ -337,6 +337,14 @@ fn generate_cut_from_balance_node(
     // Extract the nodes for the random cut.
     let mut a_pop = 0;
     while let Some(next) = buf.deque.pop_front() {
+        if next >= subgraph.pops.len() {
+            panic!(
+                "MST node out of range: next={} subgraph_len={} buf_in_a_len={}",
+                next,
+                subgraph.pops.len(),
+                buf.in_a.len()
+            );
+        }
         if !buf.in_a[next] {
             proposal.a_nodes.push(subgraph_map[next]);
             a_pop += subgraph.pops[next];
@@ -357,6 +365,7 @@ fn generate_cut_from_balance_node(
     proposal.b_pop = subgraph.total_pop - a_pop;
     buf.balance_nodes.len()
 }
+
 
 /// Chooses a random cut from a nonempty set of available ε-balanced cuts
 /// and generates the ReCom proposal induced by the cut.

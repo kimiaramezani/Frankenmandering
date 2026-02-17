@@ -42,3 +42,8 @@ import-ipynb==0.2
 # Build and install the extension into your env
 # cd revrecom_py (Go to the revrecom_py folder)
 # maturin develop --release
+
+# Whenever you make changes to the rust files you will ahve to create a new build
+# conda activate gerrymender
+# cd revrecom_py
+# maturin develop --release

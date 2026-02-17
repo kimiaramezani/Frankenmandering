@@ -81,7 +81,7 @@ def run_rev_from_frankendata(
     if auto_widen_tol:
         tol_needed = _tol_covering_seed(lbl, K)
         if tol_needed > tol:
-            tol = tol_needed + 1e-6  # tiny epsilon
+            tol = tol_needed # + 1e-6  # tiny epsilon
     if debug_print:
         print(f"[revrecom_connector] K={K} sizes={cnt.tolist()} tol_used={tol:.4f}")
 
