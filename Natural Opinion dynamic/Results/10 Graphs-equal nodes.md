@@ -3,12 +3,10 @@ In this report, 10 different graphs with 240 nodes, each has 20 opinions are gen
 Experiment 1: Without normalization 
 Experiment 2: With normalization
 
-DRF 1 = f1  
-Drf2 = DRF with no social network     
-DRF3 = DRF with social network
-
-Blue graph shows distance between two consecutive opinions: This graph shows the distance between opinion [i+1] and opinion [i]
-
+DRF1 = f1  
+DRF2 = DRF with social network
+ثث
+ۀقققق
 # Summary of the results
 
 | Metrics |Experiment 1 | Experiment 2 |
