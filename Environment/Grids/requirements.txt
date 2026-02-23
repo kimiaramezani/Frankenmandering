@@ -2,22 +2,27 @@
 # conda activate gerrymender
 
 # python==3.12
-pandas>=2.2
-numpy>=1.26
-matplotlib>=3.10
-pyyaml>=6.0
+pandas==2.2
+numpy==1.26
+matplotlib==3.10
+pyyaml==6.0.2
 
 #Plotting (extra)
-imageio>=2.37.0
-plotly>=6.3.0
-networkx>=3.5
-torch>=2.8.0
-#torchaudio>=2.8.0
-#torchvision>=0.23.0
+imageio==2.37.0
+plotly==6.3.0
+networkx==3.6
+torch==2.10.0   
+#torchaudio==2.8.0
+#torchvision==0.23.0
 # pip install pyg-lib torch-scatter torch-sparse torch-cluster torch-spline-conv -f https://data.pyg.org/whl/torch-2.8.0+cpu.html
-torch-geometric>=2.6.1
+torch-geometric==2.6.1
 gymnasium==1.2.0
 import-ipynb==0.2
+gerrychain==0.3.2
+geopandas==1.1.2
+requests==2.32.5
+
+
 
 # Once the above libraries are installed, run the following command to install additional dependencies:
 # Install Rust toolchain (Windows)

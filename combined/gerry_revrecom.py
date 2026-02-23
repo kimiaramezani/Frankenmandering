@@ -32,7 +32,6 @@ def _labels_from_fd(fd) -> np.ndarray:
 def _set_fd_labels(fd, labels: np.ndarray) -> None:
     fd.dist_label = torch.as_tensor(labels, dtype=torch.long)
 
-
 def _dense_reindex_zero_based(labels: np.ndarray) -> tuple[np.ndarray, int]:
     uniq = np.unique(labels)
     if uniq.min() < 0:
@@ -40,7 +39,6 @@ def _dense_reindex_zero_based(labels: np.ndarray) -> tuple[np.ndarray, int]:
     remap = {int(a): i for i, a in enumerate(uniq.tolist())}
     out = np.fromiter((remap[int(a)] for a in labels), count=labels.size, dtype=np.int64)
     return out, len(uniq)
-
 
 def _build_gc_graph_from_G(G, pop_col: str, pops: Optional[np.ndarray] = None) -> GCGraph:
     """
@@ -77,7 +75,6 @@ def _build_gc_graph_from_G(G, pop_col: str, pops: Optional[np.ndarray] = None) -
 
     return GCGraph.from_networkx(nxg)
 
-
 def _build_partition(gc_graph: GCGraph, labels0: np.ndarray, pop_col: str) -> Partition:
     labels0 = np.asarray(labels0, dtype=np.int64)
     labels, K = _dense_reindex_zero_based(labels0)
@@ -99,11 +96,9 @@ def _build_partition(gc_graph: GCGraph, labels0: np.ndarray, pop_col: str) -> Pa
 
     return part
 
-
 def _assignment_vector(partition: Partition, N: int) -> np.ndarray:
     # Guaranteed order 0..N-1
     return np.asarray([partition.assignment.mapping[i] for i in range(N)], dtype=np.int64)
-
 
 def gerry_revrecom_generator(
     G,

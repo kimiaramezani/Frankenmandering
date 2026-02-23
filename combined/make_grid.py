@@ -12,6 +12,7 @@ from matplotlib.colors import ListedColormap, BoundaryNorm
 import matplotlib.tri as mtri
 from matplotlib.colors import TwoSlopeNorm
 from torch_geometric.utils import is_undirected, to_undirected
+import networkx as nx
 
 class Graph:
     def __init__(self, df_nodes: pd.DataFrame, G: nx.Graph):
@@ -123,7 +124,7 @@ class Graph:
 
     def _push_node_attrs(self, *, to_geo=True, to_social=True, to_union=True):
         """Copy x,y (+ district/opinion if present) from df_nodes onto G, G_geo, G_social."""
-        import networkx as nx
+        
         cols = self.df_nodes.columns
         have_x = 'x' in cols; have_y = 'y' in cols
         have_d = 'district' in cols; have_o = 'opinion' in cols
