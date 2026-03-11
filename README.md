@@ -26,4 +26,8 @@ We implement the ideas of the uploaded papers in the [Reference Papers](https://
 | [`Natural_OD_inch.ipynb`](https://github.com/kimiaramezani/Frankenmandering/blob/main/Natural%20Opinion%20dynamic/Test/Natural_OD_inch.ipynb) | Code for testing Natural Opinion Dynamic behavior based on inchworm structure |
 
 
-
+## 📁 [MCMC](https://github.com/kimiaramezani/Frankenmandering/tree/main/MCMC)
+### 📂 Experiments
+| File | Description |
+|------|------------|
+| [`MCMC vs NOD.md`](https://github.com/kimiaramezani/Frankenmandering/blob/main/MCMC/Results/MCMC%20vs%20NOD.md) | Show the ratio of MCMC to NOD |
