@@ -12,6 +12,7 @@ import torch
 from gerrychain import Graph as GCGraph
 from gerrychain.partition import Partition
 from gerrychain.proposals import reversible_recom
+from gerrychain.tree import recursive_tree_part
 from gerrychain.updaters import Tally, cut_edges
 
 
@@ -22,6 +23,7 @@ class GerryRevReComConfig:
     M: int = 30                    # balance-edge upper bound (same meaning as your M)
     repeat_until_valid: bool = False
     seed: Optional[int] = None     # if set, seeds Python's RNG via np.random + random
+    use_recursive_seed: bool = False  # use GerryChain recursive tree seeding for the initial plan
 
 
 def _labels_from_fd(fd) -> np.ndarray:
@@ -96,6 +98,25 @@ def _build_partition(gc_graph: GCGraph, labels0: np.ndarray, pop_col: str) -> Pa
 
     return part
 
+
+def _recursive_tree_assignment(
+    gc_graph: GCGraph,
+    K: int,
+    ideal_population: float,
+    epsilon: float,
+    seed: Optional[int],
+) -> np.ndarray:
+    """Create a contiguous assignment via recursive tree partitioning."""
+    params = {
+        "parts": K,
+        "ideal_population": ideal_population,
+        "epsilon": epsilon,
+    }
+    if seed is not None:
+        params["seed"] = seed
+    assignment = recursive_tree_part(gc_graph, **params)
+    return np.asarray([assignment[i] for i in range(len(assignment))], dtype=np.int64)
+
 def _assignment_vector(partition: Partition, N: int) -> np.ndarray:
     # Guaranteed order 0..N-1
     return np.asarray([partition.assignment.mapping[i] for i in range(N)], dtype=np.int64)
@@ -124,14 +145,22 @@ def gerry_revrecom_generator(
     N = len(G.df_nodes)
 
     labels0 = _labels_from_fd(fd)
+    K = int(labels0.max() + 1)
     gc_graph = _build_gc_graph_from_G(G, cfg.pop_col, pops=pops)
-    partition = _build_partition(gc_graph, labels0, cfg.pop_col)
-
-    # Ideal pop target for each district
-    # population == sum node pops, K == number of parts
-    K = len(partition.parts)
-    total_pop = sum(partition["population"].values())
+    total_pop = sum(gc_graph.nodes[i][cfg.pop_col] for i in range(N))
     pop_target = total_pop / K
+
+    if cfg.use_recursive_seed:
+        labels0 = _recursive_tree_assignment(
+            gc_graph,
+            K,
+            pop_target,
+            cfg.epsilon,
+            cfg.seed,
+        )
+        _set_fd_labels(fd, labels0)
+
+    partition = _build_partition(gc_graph, labels0, cfg.pop_col)
 
     proposal = partial(
         reversible_recom,

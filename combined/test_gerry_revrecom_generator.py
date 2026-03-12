@@ -66,6 +66,7 @@ def main():
         epsilon=eps,
         M=30,
         seed=123,
+        use_recursive_seed=True,
     )
 
     print(f"[test] N={len(seed_labels)} K={K} seed_sizes={count_per_district(seed_labels, K).tolist()} eps_used={eps:.4f}")
