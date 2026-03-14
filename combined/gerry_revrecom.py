@@ -23,7 +23,7 @@ class GerryRevReComConfig:
     M: int = 30                    # balance-edge upper bound (same meaning as your M)
     repeat_until_valid: bool = False
     seed: Optional[int] = None     # if set, seeds Python's RNG via np.random + random
-    use_recursive_seed: bool = False  # use GerryChain recursive tree seeding for the initial plan
+    use_recursive_seed: bool = True  # use GerryChain recursive tree seeding for the initial plan
 
 
 def _labels_from_fd(fd) -> np.ndarray:
@@ -108,7 +108,7 @@ def _recursive_tree_assignment(
 ) -> np.ndarray:
     """Create a contiguous assignment via recursive tree partitioning."""
     params = {
-        "parts": K,
+        "parts": list(range(K)),
         "pop_target": ideal_population,
         "pop_col": pop_col,
         "epsilon": epsilon,
