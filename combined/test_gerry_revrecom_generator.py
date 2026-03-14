@@ -62,7 +62,7 @@ def main():
     # For this smoke test, auto-widen epsilon just so we can see accepted moves.
     # eps = tol_covering_seed(seed_labels, K)
 
-    eps = 0.03  # You can set this to a fixed value for testing, but be aware it may reject all moves if your seed is too imbalanced.
+    eps = 0.25  # You can set this to a fixed value for testing, but be aware it may reject all moves if your seed is too imbalanced.
     
     cfg = GerryRevReComConfig(
         epsilon=eps,
