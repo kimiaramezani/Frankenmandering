@@ -104,16 +104,15 @@ def _recursive_tree_assignment(
     K: int,
     ideal_population: float,
     epsilon: float,
-    seed: Optional[int],
+    pop_col: str,
 ) -> np.ndarray:
     """Create a contiguous assignment via recursive tree partitioning."""
     params = {
         "parts": K,
-        "ideal_population": ideal_population,
+        "pop_target": ideal_population,
+        "pop_col": pop_col,
         "epsilon": epsilon,
     }
-    if seed is not None:
-        params["seed"] = seed
     assignment = recursive_tree_part(gc_graph, **params)
     return np.asarray([assignment[i] for i in range(len(assignment))], dtype=np.int64)
 
@@ -156,7 +155,7 @@ def gerry_revrecom_generator(
             K,
             pop_target,
             cfg.epsilon,
-            cfg.seed,
+            cfg.pop_col,
         )
         _set_fd_labels(fd, labels0)
 
